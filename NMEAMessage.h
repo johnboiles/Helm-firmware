@@ -1,6 +1,7 @@
 #ifndef NMEAMessage_h
 #define NMEAMessage_h
 
+#include "types.h"
 
 class BaseNMEAMessage
 {
@@ -22,15 +23,35 @@ public:
     NMEAMessageGLL(const char *message);
     double latitude() { return _latitude; }
     double longitude() { return _longitude; }
-    int hour() { return _hour; }
-    int minute() { return _minute; }
-    double second() { return _second; }
+    Time time() { return _time; }
 private:
     double _latitude;
     double _longitude;
-    int _hour;
-    int _minute;
-    double _second;
+    Time _time;
+};
+
+class NMEAMessageRMC : public BaseNMEAMessage
+{
+public:
+    NMEAMessageRMC(const char *message);
+    // TODO: Maybe create a time struct
+    Time time() { return _time; }
+    // TODO: Status
+    double latitude() { return _latitude; }
+    double longitude() { return _longitude; }
+    double speedOverGround() { return _speedOverGround; }
+    double trackMadeGood() { return _trackMadeGood; }
+    Date date() { return _date; }
+    //! West is negative
+    double magneticVariation() { return _magneticVariation; }
+private:
+    Time _time;
+    double _latitude;
+    double _longitude;
+    double _speedOverGround;
+    double _trackMadeGood;
+    Date _date;
+    double _magneticVariation;
 };
 
 #endif

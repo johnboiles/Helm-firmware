@@ -1,6 +1,8 @@
 #ifndef SeaTalkMessage_h
 #define SeaTalkMessage_h
+
 #include "inttypes.h"
+#include "Types.h"
 
 typedef enum {
     SeaTalkMessageTypeWindAngle = 0x10,
@@ -9,6 +11,11 @@ typedef enum {
     SeaTalkMessageTypeDepth = 0x00,
     SeaTalkMessageTypeWaterTemperature = 0x23,
     SeaTalkMessageTypeDistanceDisplayUnits = 0x24,
+    SeaTalkMessageTypeLatitude = 0x50,
+    SeaTalkMessageTypeLongitude = 0x51,
+    SeaTalkMessageTypeSpeedOverGround = 0x52,
+    SeaTalkMessageTypeMagneticCourse = 0x53,
+    SeaTalkMessageTypeTime = 0x54
 } SeaTalkMessageType;
 
 
@@ -54,7 +61,19 @@ public:
 class SeaTalkMessageTime : public BaseSeaTalkMessage
 {
 public:
-    SeaTalkMessageTime(int hour, int minute, int second);
+    SeaTalkMessageTime(Time time);
+};
+
+class SeaTalkMessageSpeedOverGround : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageSpeedOverGround(double speed);
+};
+
+class SeaTalkMessageMagneticCourse : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageMagneticCourse(double course);
 };
 
 BaseSeaTalkMessage *newSeaTalkMessage(const uint8_t *message, int messageLength);

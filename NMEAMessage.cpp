@@ -22,44 +22,71 @@ NMEAMessageWind::NMEAMessageWind(float windAngle, float windSpeed) {
 
 
 NMEAMessageGLL::NMEAMessageGLL(const char *message) {
-    int messageLength = strlen(message);
     char *fragments[10];
-    char checksum[2];
     int fragmentCount = 0;
-    int fragmentStartIndex = 0;
-
-    // Split into fragments by commas
-    for (int i = 0; i < messageLength; i++) {
-        if (message[i] == ',' || message[i] == '*') {
-            int fragmentLength = i - fragmentStartIndex;
-            char *fragment;
-            if (fragmentLength > 0) {
-                fragment = (char *)malloc((fragmentLength + 1) * sizeof(char));
-                memcpy(fragment, &message[fragmentStartIndex], fragmentLength);
-                // Null terminate for easy printing
-                fragment[fragmentLength] = 0;
-            } else {
-                // Fill empty fragments with the empty string
-                fragment = (char *)malloc(2 * sizeof(char));
-                strcpy(fragment, "");
-            }
-            fragments[fragmentCount++] = fragment;
-            fragmentStartIndex = i + 1;
-        }
-        if (message[i] == '*') {
-            memcpy(checksum, &message[i + 1], 2);
-            break;
-        }
-    }
+    splitMessageIntoFragments(message, strlen(message), fragments, &fragmentCount);
 
     _latitude = degreesFromCoordinateString(fragments[1], fragments[2][0]);
     _longitude = degreesFromCoordinateString(fragments[3], fragments[4][0]);
-    sscanf(fragments[5], "%2d%2d", &_hour, &_minute);
-    // TODO: Can't figure out how to read floats with sscanf
-    _second = atof(&fragments[5][4]);
-
+    _time = timeFromString(fragments[5]);
     for (int i = 0; i < fragmentCount; i++) {
       free(fragments[i]);
       // Serial.println(fragments[i]);
+    }
+}
+
+//                                                          12
+//         1         2 3       4 5        6  7   8   9    10 11|  13
+//         |         | |       | |        |  |   |   |    |  | |   |
+//  $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m,*hh<CR><LF>
+// Field Number:
+
+// 1 UTC Time
+
+// 2 Status, V=Navigation receiver warning A=Valid
+
+// 3 Latitude
+
+// 4 N or S
+
+// 5 Longitude
+
+// 6 E or W
+
+// 7Speed over ground, knots
+ 
+// 8 Track made good, degrees true
+
+// 9 Date, ddmmyy
+
+// 10 Magnetic Variation, degrees
+
+// 11 E or W
+
+// 12 FAA mode indicator (NMEA 2.3 and later)
+
+// Checksum
+
+// A status of V means the GPS has a valid fix that is below an internal quality threshold, e.g. because the dilution of precision is too high or an elevation mask test failed.
+
+NMEAMessageRMC::NMEAMessageRMC(const char *message) {
+    char *fragments[12];
+    int fragmentCount = 0;
+    splitMessageIntoFragments(message, strlen(message), fragments, &fragmentCount);
+
+    _time = timeFromString(fragments[1]);
+    // TODO: Parse status (fragments[2])
+    _latitude = degreesFromCoordinateString(fragments[3], fragments[4][0]);
+    _longitude = degreesFromCoordinateString(fragments[5], fragments[6][0]);
+    _speedOverGround = atof(fragments[7]);
+    _trackMadeGood = atof(fragments[8]);
+    sscanf(fragments[9], "%2d%2d%2d", &(_date.day), &(_date.month), &(_date.year));
+    _magneticVariation = atof(fragments[10]);
+    if (fragments[11][0] == 'W') {
+        _magneticVariation = _magneticVariation * -1;
+    }
+
+    for (int i = 0; i < fragmentCount; i++) {
+      free(fragments[i]);
     }
 }

@@ -66,7 +66,7 @@ void loop() {
                  SEND_SEATALK_MESSAGE(seaTalkMessageLongitude);
                  SeaTalkMessageLatitude seaTalkMessageLatitude(latlonMessage.latitude());
                  SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
-                 SeaTalkMessageTime seaTalkMessageTime(latlonMessage.hour(), latlonMessage.minute(), latlonMessage.second());
+                 SeaTalkMessageTime seaTalkMessageTime(latlonMessage.time());
                  SEND_SEATALK_MESSAGE(seaTalkMessageTime);
             }
         }

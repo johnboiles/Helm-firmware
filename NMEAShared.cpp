@@ -1,6 +1,7 @@
 #include "NMEAShared.h"
 #include <Arduino.h>
 #include <stdio.h>
+#include "types.h"
 
 int calculateChecksum(char *message, int length) {
   int c = 0;
@@ -33,4 +34,40 @@ double degreesFromCoordinateString(const char *string, char direction) {
         coordinate = coordinate * -1;
     }
     return coordinate;
+}
+
+void splitMessageIntoFragments(const char *message, int messageLength, char **fragments, int *fragmentCount) {
+    *fragmentCount = 0;
+    int fragmentStartIndex = 0;
+
+    // Split into fragments by commas
+    for (int i = 0; i < messageLength; i++) {
+        if (message[i] == ',' || message[i] == '*') {
+            int fragmentLength = i - fragmentStartIndex;
+            char *fragment;
+            if (fragmentLength > 0) {
+                fragment = (char *)malloc((fragmentLength + 1) * sizeof(char));
+                memcpy(fragment, &message[fragmentStartIndex], fragmentLength);
+                // Null terminate for easy printing
+                fragment[fragmentLength] = 0;
+            } else {
+                // Fill empty fragments with the empty string
+                fragment = (char *)malloc(2 * sizeof(char));
+                strcpy(fragment, "");
+            }
+            fragments[(*fragmentCount)++] = fragment;
+            fragmentStartIndex = i + 1;
+        }
+        if (message[i] == '*') {
+            break;
+        }
+    }
+}
+
+Time timeFromString(const char *timeString) {
+    Time time;
+    sscanf(timeString, "%2d%2d", &(time.hour), &(time.minute));
+    // TODO: Can't figure out how to read floats with sscanf
+    time.second = atof(&timeString[4]);
+    return time;
 }

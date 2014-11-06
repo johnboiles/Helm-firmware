@@ -2,6 +2,7 @@
 #include <cstring>
 #include "NMEAShared.h"
 #include <Arduino.h>
+#include "ctype.h"
 
 typedef enum {
     NMEAParserStateReset = 0,

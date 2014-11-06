@@ -2,7 +2,8 @@
 #include <cstring>
 #include "NMEAShared.h"
 #include <stdio.h>
-#include <Arduino.h>
+#include "Arduino.h"
+#include "stdlib.h"
 
 const char *BaseNMEAMessage::message() {
     return _message;

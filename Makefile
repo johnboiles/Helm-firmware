@@ -84,6 +84,7 @@ LIBS = -lm
 # names for the compiler programs
 CC = $(COMPILER_PATH)/arm-none-eabi-gcc
 CXX = $(COMPILER_PATH)/arm-none-eabi-g++
+TEST_CXX = /usr/bin/g++
 OBJCOPY = $(COMPILER_PATH)/arm-none-eabi-objcopy
 SIZE = $(COMPILER_PATH)/arm-none-eabi-size
 
@@ -107,6 +108,7 @@ L_INC := $(foreach lib,$(filter %/, $(wildcard $(LIBRARY_PATH)/*/)), -I$(lib))
 
 OBJS_FILES := $(INO_FILES:.ino=.o) $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o) $(TC_FILES:.c=.o) $(TCPP_FILES:.cpp=.o) $(LC_FILES:.c=.o) $(LCPP_FILES:.cpp=.o)
 OBJS := $(foreach obj,$(OBJS_FILES), $(BUILDDIR)/$(obj))
+TEST_FILES := $(C_FILES) $(CPP_FILES)
 
 all: hex
 
@@ -121,6 +123,13 @@ reboot:
 	$(Q)-$(TOOLS_PATH)/teensy_reboot
 
 upload: post_compile reboot
+
+test:
+	@echo "Compiling tests $(TEST_FILES)"
+	$(TEST_CXX) -Wall -Itesting -I. $(TEST_FILES) testing/ArduinoMock.cpp testing/Tests.c -o test_suite
+	@echo "Running tests"
+	./test_suite
+	rm test_suite
 
 $(BUILDDIR)/%.o: %.c
 	@echo "[CC]\t$<"
@@ -152,4 +161,4 @@ $(TARGET).elf: $(OBJS) $(LDSCRIPT)
 clean:
 	@echo Cleaning...
 	$(Q)rm -rf "$(BUILDDIR)"
-	$(Q)rm -f "$(TARGET).elf" "$(TARGET).hex" "$(TARGET).map"
+	$(Q)rm -f "$(TARGET).elf" "$(TARGET).hex" "$(TARGET).map"m

@@ -1,6 +1,7 @@
 #include "SeaTalkMessage.h"
 #include <cstring>
 #include <Arduino.h>
+#include "math.h"
 
 BaseSeaTalkMessage::BaseSeaTalkMessage(const uint8_t *message, int messageLength) {
     memcpy(_message, message, messageLength);

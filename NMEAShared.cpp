@@ -1,6 +1,8 @@
 #include "NMEAShared.h"
-#include <Arduino.h>
+#include "Arduino.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <cstring>
 #include "types.h"
 
 int calculateChecksum(char *message, int length) {

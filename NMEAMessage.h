@@ -6,6 +6,7 @@
 class BaseNMEAMessage
 {
 public:
+    BaseNMEAMessage();
     const char *message();
     // TODO: This should be private but I forget how friend classes work in C++
     char _message[100];

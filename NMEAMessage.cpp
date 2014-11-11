@@ -63,3 +63,14 @@ NMEAMessageRMC::NMEAMessageRMC(const char *message) : BaseNMEAMessage() {
       free(fragments[i]);
     }
 }
+
+
+NMEAMessageDBT::NMEAMessageDBT(float depth) : BaseNMEAMessage() {
+    sprintf(_message, "$STDBT,%.1f,f,,M,,F", depth);
+    int messageLength = strlen(_message);
+    int checksum = calculateChecksum(&(_message[1]), messageLength - 1);
+    _message[messageLength++] = '*';
+    sprintf(&(_message[messageLength]), "%2X", checksum);
+    messageLength += 2;
+    sprintf(&(_message[messageLength]), "\r\n");
+}

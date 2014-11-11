@@ -55,4 +55,13 @@ private:
     double _magneticVariation;
 };
 
+
+//! Depth below transducer
+class NMEAMessageDBT : public BaseNMEAMessage
+{
+public:
+    //! Depth in feet
+    NMEAMessageDBT(float depth);
+};
+
 #endif

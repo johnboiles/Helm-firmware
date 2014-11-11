@@ -138,6 +138,12 @@ BaseSeaTalkMessage *newSeaTalkMessage(const uint8_t *message, int messageLength)
         case SeaTalkMessageTypeWindSpeed:
             return new SeaTalkMessageWindSpeed(message);
             break;
+        case SeaTalkMessageTypeDepth:
+            return new SeaTalkMessageDepth(message);
+            break;
+        case SeaTalkMessageTypeSpeedThroughWater:
+            return new SeaTalkMessageSpeedThroughWater(message);
+            break;
         default:
             return new BaseSeaTalkMessage(message, messageLength);
             break;

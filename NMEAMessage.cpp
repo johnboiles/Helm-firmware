@@ -6,6 +6,16 @@
 #include "stdlib.h"
 
 
+void closeMessage(char *message) {
+    int messageLength = strlen(message);
+    int checksum = calculateChecksum(&(message[1]), messageLength - 1);
+    message[messageLength++] = '*';
+    sprintf(&(message[messageLength]), "%2X", checksum);
+    messageLength += 2;
+    sprintf(&(message[messageLength]), "\r\n");
+}
+
+
 BaseNMEAMessage::BaseNMEAMessage() {
     memset(_message, 0, sizeof(_message));
 }
@@ -18,12 +28,7 @@ const char *BaseNMEAMessage::message() {
 
 NMEAMessageWind::NMEAMessageWind(float windAngle, float windSpeed) : BaseNMEAMessage() {
     sprintf(_message, "$WIMWV,%.1f,R,%.1f,N,A", windAngle, windSpeed);
-    int messageLength = strlen(_message);
-    int checksum = calculateChecksum(&(_message[1]), messageLength - 1);
-    _message[messageLength++] = '*';
-    sprintf(&(_message[messageLength]), "%2X", checksum);
-    messageLength += 2;
-    sprintf(&(_message[messageLength]), "\r\n");
+    closeMessage(_message);
 }
 
 
@@ -67,10 +72,11 @@ NMEAMessageRMC::NMEAMessageRMC(const char *message) : BaseNMEAMessage() {
 
 NMEAMessageDBT::NMEAMessageDBT(float depth) : BaseNMEAMessage() {
     sprintf(_message, "$STDBT,%.1f,f,,M,,F", depth);
-    int messageLength = strlen(_message);
-    int checksum = calculateChecksum(&(_message[1]), messageLength - 1);
-    _message[messageLength++] = '*';
-    sprintf(&(_message[messageLength]), "%2X", checksum);
-    messageLength += 2;
-    sprintf(&(_message[messageLength]), "\r\n");
+    closeMessage(_message);
+}
+
+
+NMEAMessageVHW::NMEAMessageVHW(float knots) : BaseNMEAMessage() {
+    sprintf(_message, "$STVHW,,T,,M,%.1f,N,,K", knots);
+    closeMessage(_message);
 }

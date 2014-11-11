@@ -46,6 +46,12 @@ TEST_CASE( "NMEAMessageDBT is constructed properly" ) {
     REQUIRE( std::string(dbt.message()) == std::string("$STDBT,24.3,f,,M,,F*23\r\n") );
 }
 
+TEST_CASE( "NMEAMessageVHW is constructed properly" ) {
+    NMEAMessageVHW vhw = NMEAMessageVHW(6.39);
+    REQUIRE( strlen(vhw.message()) == 26);
+    REQUIRE( std::string(vhw.message()) == std::string("$STVHW,,T,,M,6.4,N,,K*7E\r\n") );
+}
+
 TEST_CASE( "SeaTalkMessageWindAngle is parsed properly" ) {
     uint8_t message[4] = {0x10, 0x11, 0x02, 0x6E};
     SeaTalkMessageWindAngle windAngle = SeaTalkMessageWindAngle(message);

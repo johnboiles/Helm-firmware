@@ -96,6 +96,14 @@ void loop() {
             } else if (messageType == SeaTalkMessageTypeWindSpeed) {
                 SeaTalkMessageWindSpeed *windSpeedMessage = (SeaTalkMessageWindSpeed *)message;
                 WindSpeed = windSpeedMessage->windSpeed();
+            } else if (messageType == SeaTalkMessageTypeDepth) {
+                SeaTalkMessageDepth *depthMessage = (SeaTalkMessageDepth *)message;
+                NMEAMessageDBT dbt = NMEAMessageDBT(depthMessage->depth());
+                OUTPUT_SERIAL.print(dbt.message());
+            } else if (messageType == SeaTalkMessageTypeSpeedThroughWater) {
+                SeaTalkMessageSpeedThroughWater *speedMessage = (SeaTalkMessageSpeedThroughWater *)message;
+                NMEAMessageVHW vhw = NMEAMessageVHW(speedMessage->speed());
+                OUTPUT_SERIAL.print(vhw.message());
             }
             delete[] message;
         }

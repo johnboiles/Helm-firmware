@@ -64,4 +64,15 @@ public:
     NMEAMessageDBT(float depth);
 };
 
+
+//! Water speed and heading
+class NMEAMessageVHW : public BaseNMEAMessage
+{
+public:
+    //! Water speed in Knots
+    // TODO: There is all sorts of other data in this message. Leaving it out for now since I don't need it.
+    NMEAMessageVHW(float knots);
+};
+
+
 #endif

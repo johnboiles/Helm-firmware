@@ -42,13 +42,13 @@ TEST_CASE( "NMEAMessageWind is constructed properly" ) {
 
 TEST_CASE( "SeaTalkMessageWindAngle is parsed properly" ) {
     uint8_t message[4] = {0x10, 0x11, 0x02, 0x6E};
-    SeaTalkMessageWindAngle windAngle = SeaTalkMessageWindAngle(message, 4);
+    SeaTalkMessageWindAngle windAngle = SeaTalkMessageWindAngle(message);
     REQUIRE( windAngle.windAngle() == 311.0 );
 }
 
 TEST_CASE( "SeaTalkMessageWindSpeed is parsed properly" ) {
     uint8_t message[4] = {0x11, 0x11, 0x02, 0x03};
-    SeaTalkMessageWindSpeed windSpeed = SeaTalkMessageWindSpeed(message, 4);
+    SeaTalkMessageWindSpeed windSpeed = SeaTalkMessageWindSpeed(message);
     REQUIRE( windSpeed.windSpeed() == 2.3f );
 }
 
@@ -114,4 +114,28 @@ TEST_CASE( "SeaTalkMessageTime is generated properly" ) {
     SeaTalkMessageTime sttime = SeaTalkMessageTime(time);
     uint8_t expected[4] = {0x54, 0xB1, 0xDA, 0x04};
     assertEqualSeaTalkMessages(&sttime, expected, 4);
+}
+
+TEST_CASE( "SeaTalkMessageDepth is generated properly" ) {
+    SeaTalkMessageDepth depth = SeaTalkMessageDepth(12.36);
+    uint8_t expected[5] = {0x00, 0x02, 0x00, 0x7C, 0x00};
+    assertEqualSeaTalkMessages(&depth, expected, 5);
+}
+
+TEST_CASE( "SeaTalkMessageDepth is parsed properly" ) {
+    uint8_t message[5] = {0x00, 0x42, 0x30, 0x46, 0x05};
+    SeaTalkMessageDepth depth = SeaTalkMessageDepth(message);
+    REQUIRE( depth.depth() == 135 );
+}
+
+TEST_CASE( "SeaTalkMessageSpeedThroughWater is generated properly" ) {
+    SeaTalkMessageSpeedThroughWater stw = SeaTalkMessageSpeedThroughWater(5.3);
+    uint8_t expected[4] = {0x20, 0x01, 0x35, 0x00};
+    assertEqualSeaTalkMessages(&stw, expected, 4);
+}
+
+TEST_CASE( "SeaTalkMessageSpeedThroughWater is parsed properly" ) {
+    uint8_t message[4] = {0x20, 0x41, 0x35, 0x00};
+    SeaTalkMessageSpeedThroughWater stw = SeaTalkMessageSpeedThroughWater(message);
+    REQUIRE( stw.speed() == 5.3 );
 }

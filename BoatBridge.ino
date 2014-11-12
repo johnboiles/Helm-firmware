@@ -60,13 +60,15 @@ void loop() {
             OUTPUT_SERIAL.write(message);
             NMEA_HS_SERIAL.write(message);
             // Push location messages out over SeaTalk
-            if (message[3] == 'G' && message[4] == 'L' && message[5] == 'L') {
-                 NMEAMessageGLL latlonMessage = NMEAMessageGLL(message);
-                 SeaTalkMessageLongitude seaTalkMessageLongitude(latlonMessage.longitude());
+            if (message[3] == 'R' && message[4] == 'M' && message[5] == 'C') {
+                 NMEAMessageRMC rmc = NMEAMessageRMC(message);
+                 SeaTalkMessageLongitude seaTalkMessageLongitude(rmc.longitude());
                  SEND_SEATALK_MESSAGE(seaTalkMessageLongitude);
-                 SeaTalkMessageLatitude seaTalkMessageLatitude(latlonMessage.latitude());
+                 SeaTalkMessageLatitude seaTalkMessageLatitude(rmc.latitude());
                  SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
-                 SeaTalkMessageTime seaTalkMessageTime(latlonMessage.time());
+                 SeaTalkMessageSpeedOverGround seaTalkMessageSpeedOverGround(rmc.speedOverGround());
+                 SEND_SEATALK_MESSAGE(seaTalkMessageSpeedOverGround);
+                 SeaTalkMessageTime seaTalkMessageTime(rmc.time());
                  SEND_SEATALK_MESSAGE(seaTalkMessageTime);
             }
         }

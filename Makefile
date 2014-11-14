@@ -124,6 +124,9 @@ reboot:
 
 upload: post_compile reboot
 
+upload-remote: $(TARGET).hex
+	upload-remote.sh
+
 test:
 	@echo "Compiling tests $(TEST_FILES)"
 	$(TEST_CXX) -Wall -Itesting -I. $(TEST_FILES) testing/ArduinoMock.cpp testing/Tests.c -o test_suite

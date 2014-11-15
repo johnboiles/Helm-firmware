@@ -16,7 +16,8 @@ typedef enum {
     SeaTalkMessageTypeLongitude = 0x51,
     SeaTalkMessageTypeSpeedOverGround = 0x52,
     SeaTalkMessageTypeMagneticCourse = 0x53,
-    SeaTalkMessageTypeTime = 0x54
+    SeaTalkMessageTypeTime = 0x54,
+    SeaTalkMessageTypeDeviceQuery = 0xA4
 } SeaTalkMessageType;
 
 
@@ -126,6 +127,13 @@ public:
     SeaTalkMessageDate(Date date);
     int messageLength() { return 4; }
     Date date();
+};
+
+class SeaTalkMessageDeviceQuery : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageDeviceQuery();
+    int messageLength() { return 5; }
 };
 
 BaseSeaTalkMessage *newSeaTalkMessage(const uint8_t *message, int messageLength);

@@ -150,6 +150,14 @@ Date SeaTalkMessageDate::date() {
     return date;
 }
 
+SeaTalkMessageDeviceQuery::SeaTalkMessageDeviceQuery() : BaseSeaTalkMessage(this->messageLength()) {
+    _message[0] = 0xA4;
+    _message[1] = 0x02;
+    _message[2] = 0x00;
+    _message[3] = 0x00;
+    _message[4] = 0x00;
+}
+
 BaseSeaTalkMessage *newSeaTalkMessage(const uint8_t *message, int messageLength) {
     // TODO: Assert that the message is the right length
     switch (message[1]) {

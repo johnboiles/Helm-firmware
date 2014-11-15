@@ -157,3 +157,9 @@ TEST_CASE( "SeaTalkMessageSpeedThroughWater is parsed properly" ) {
     SeaTalkMessageSpeedThroughWater stw = SeaTalkMessageSpeedThroughWater(message);
     REQUIRE( stw.speed() == 5.3 );
 }
+
+TEST_CASE( "SeaTalkMessageDeviceQuery is generated properly" ) {
+    uint8_t expected[5] = {0xA4, 0x02, 0x00, 0x00, 0x00};
+    SeaTalkMessageDeviceQuery dq = SeaTalkMessageDeviceQuery();
+    assertEqualSeaTalkMessages(&dq, expected, sizeof(expected));
+}

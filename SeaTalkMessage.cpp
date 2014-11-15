@@ -38,6 +38,16 @@ SeaTalkMessageDepth::SeaTalkMessageDepth(double depth) : BaseSeaTalkMessage(this
     _message[4] = (depthInteger >> 8) & 0xFF;
 }
 
+SeaTalkMessageWaterTemperature::SeaTalkMessageWaterTemperature(int celcius) : BaseSeaTalkMessage(this->messageLength()) {
+    // 23  Z1  XX  YY  Water temperature (ST50): XX deg Celsius, YY deg Fahrenheit
+    //                 Flag Z&4: Sensor defective or not connected (Z=4) 
+    //                 Corresponding NMEA sentence: MTW
+    _message[0] = 0x23;
+    _message[1] = 0x01;
+    _message[2] = celcius;
+    _message[3] = (1.8 * celcius) + 32;
+}
+
 float SeaTalkMessageWindAngle::windAngle() {
     // 10  01  XX  YY  Apparent Wind Angle: XXYY/2 degrees right of bow
     return ((_message[2] << 8) + _message[3]) / 2;

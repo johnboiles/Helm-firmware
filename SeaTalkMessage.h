@@ -49,6 +49,17 @@ public:
     bool isShallowAlarmActive() { return !!(_message[2] & 0x01); }
 };
 
+class SeaTalkMessageWaterTemperature : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageWaterTemperature(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {}
+    SeaTalkMessageWaterTemperature(int celcius);
+    int messageLength() { return 4; }
+    bool invalid() { return (_message[1] & 0x40) == 0x40; }
+    int temperatureCelcius() { return _message[2]; }
+    int temperatureFarenheit() { return _message[3]; }
+};
+
 class SeaTalkMessageWindAngle : public BaseSeaTalkMessage
 {
 public:

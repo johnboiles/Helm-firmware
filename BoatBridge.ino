@@ -61,15 +61,20 @@ void loop() {
             NMEA_HS_SERIAL.write(message);
             // Push location messages out over SeaTalk
             if (message[3] == 'R' && message[4] == 'M' && message[5] == 'C') {
-                 NMEAMessageRMC rmc = NMEAMessageRMC(message);
-                 SeaTalkMessageLongitude seaTalkMessageLongitude(rmc.longitude());
-                 SEND_SEATALK_MESSAGE(seaTalkMessageLongitude);
-                 SeaTalkMessageLatitude seaTalkMessageLatitude(rmc.latitude());
-                 SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
-                 SeaTalkMessageSpeedOverGround seaTalkMessageSpeedOverGround(rmc.speedOverGround());
-                 SEND_SEATALK_MESSAGE(seaTalkMessageSpeedOverGround);
-                 SeaTalkMessageTime seaTalkMessageTime(rmc.time());
-                 SEND_SEATALK_MESSAGE(seaTalkMessageTime);
+                NMEAMessageRMC rmc = NMEAMessageRMC(message);
+                SeaTalkMessageLongitude seaTalkMessageLongitude(rmc.longitude());
+                SEND_SEATALK_MESSAGE(seaTalkMessageLongitude);
+                SeaTalkMessageLatitude seaTalkMessageLatitude(rmc.latitude());
+                SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
+                SeaTalkMessageSpeedOverGround seaTalkMessageSpeedOverGround(rmc.speedOverGround());
+                SEND_SEATALK_MESSAGE(seaTalkMessageSpeedOverGround);
+                // Only send time once per minute
+                if (rmc.time().second == 0) {
+                    SeaTalkMessageTime seaTalkMessageTime(rmc.time());
+                    SEND_SEATALK_MESSAGE(seaTalkMessageTime);
+                    SeaTalkMessageDate seaTalkMessageDate(rmc.date());
+                    SEND_SEATALK_MESSAGE(seaTalkMessageDate);
+                }
             }
         }
     }
@@ -88,7 +93,7 @@ void loop() {
             // Create a message
             // TODO: Need to dig deeper into the UART so that I can do collision managment
             BaseSeaTalkMessage *message = newSeaTalkMessage(SEATALK_PARSER.message(), SEATALK_PARSER.messageLength());
-//            PRINT_SEATALK_MESSAGE(message);
+            // PRINT_SEATALK_MESSAGE(message);
             SeaTalkMessageType messageType = message->messageType();
             if (messageType == SeaTalkMessageTypeWindAngle) {
                 SeaTalkMessageWindAngle *windAngleMessage = (SeaTalkMessageWindAngle *)message;

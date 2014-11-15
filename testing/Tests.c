@@ -85,6 +85,12 @@ void assertEqualSeaTalkMessages(BaseSeaTalkMessage *seaTalkMessage, uint8_t *exp
     }
 }
 
+TEST_CASE( "SeaTalkMessageLampIntensity is generated properly ") {
+    SeaTalkMessageLampIntensity lampIntensity = SeaTalkMessageLampIntensity(3);
+    uint8_t expected[3] = {0x30, 0x00, 0x0C};
+    assertEqualSeaTalkMessages(&lampIntensity, expected, 3);
+}
+
 TEST_CASE( "SeaTalkMessageLatitude is generated properly" ) {
     SeaTalkMessageLatitude lat = SeaTalkMessageLatitude(37.866384);
     uint8_t expected[5] = {0x50, 0x02, 0x25, 0x4E, 0x14};

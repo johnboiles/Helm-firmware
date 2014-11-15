@@ -11,6 +11,7 @@ typedef enum {
     SeaTalkMessageTypeDepth = 0x00,
     SeaTalkMessageTypeWaterTemperature = 0x23,
     SeaTalkMessageTypeDistanceDisplayUnits = 0x24,
+    SeaTalkMessageTypeLampIntensity = 0x30,
     SeaTalkMessageTypeLatitude = 0x50,
     SeaTalkMessageTypeLongitude = 0x51,
     SeaTalkMessageTypeSpeedOverGround = 0x52,
@@ -73,6 +74,16 @@ public:
     double speed() { return (_message[2] + (_message[3] << 8)) / 10.0; }
 };
 
+class SeaTalkMessageLampIntensity : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageLampIntensity(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {}
+    SeaTalkMessageLampIntensity(uint8_t intensity);
+    int messageLength() { return 3; }
+    //! Intensity 0-3
+    uint8_t intensity() { return (_message[2] & 0xF) / 4; }
+};
+
 class SeaTalkMessageLatitude : public BaseSeaTalkMessage
 {
 public:
@@ -106,6 +117,15 @@ class SeaTalkMessageTime : public BaseSeaTalkMessage
 public:
     SeaTalkMessageTime(Time time);
     int messageLength() { return 4; }
+};
+
+class SeaTalkMessageDate : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageDate(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {}
+    SeaTalkMessageDate(Date date);
+    int messageLength() { return 4; }
+    Date date();
 };
 
 BaseSeaTalkMessage *newSeaTalkMessage(const uint8_t *message, int messageLength);

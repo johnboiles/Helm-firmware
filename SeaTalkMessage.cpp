@@ -57,6 +57,12 @@ SeaTalkMessageSpeedThroughWater::SeaTalkMessageSpeedThroughWater(double speed) :
     _message[3] = (intSpeed >> 8) & 0xFF;
 }
 
+SeaTalkMessageLampIntensity::SeaTalkMessageLampIntensity(uint8_t intensity) : BaseSeaTalkMessage(this->messageLength()) {
+    _message[0] = 0x30;
+    _message[1] = 0x00;
+    _message[2] = (intensity * 4) & 0xF;
+}
+
 SeaTalkMessageLatitude::SeaTalkMessageLatitude(double latitude) : BaseSeaTalkMessage(this->messageLength()) {
     // 50  Z2  XX  YY  YY  LAT position: XX degrees, (YYYY & 0x7FFF)/100 minutes 
     // MSB of Y = YYYY & 0x8000 = South if set, North if cleared
@@ -129,6 +135,21 @@ SeaTalkMessageTime::SeaTalkMessageTime(Time time) : BaseSeaTalkMessage(this->mes
     _message[3] = time.hour;
 }
 
+SeaTalkMessageDate::SeaTalkMessageDate(Date date) : BaseSeaTalkMessage(this->messageLength()) {
+    _message[0] = 0x56;
+    _message[1] = 0x1 | ((date.month << 4) & 0xF0);
+    _message[2] = date.day;
+    _message[3] = date.year;
+}
+
+Date SeaTalkMessageDate::date() {
+    Date date;
+    date.month = (_message[1] & 0xF0) >> 4;
+    date.day = _message[2];
+    date.year = _message[3];
+    return date;
+}
+
 BaseSeaTalkMessage *newSeaTalkMessage(const uint8_t *message, int messageLength) {
     // TODO: Assert that the message is the right length
     switch (message[1]) {
@@ -153,7 +174,7 @@ BaseSeaTalkMessage *newSeaTalkMessage(const uint8_t *message, int messageLength)
 void printSeaTalkMessage(uint8_t *message, int messageLength) {
     for (int i = 0; i < messageLength; i++) {
         if (i == 0) {
-            Serial.printf("%03X ", message[i]);
+            Serial.printf("%03X ", message[i] + 256);
         } else {
             Serial.printf("%02X ", message[i]);
         }

@@ -43,6 +43,7 @@ void splitMessageIntoFragments(const char *message, int messageLength, char **fr
     int fragmentStartIndex = 0;
 
     // Split into fragments by commas
+    // TODO: This could maybe be significantly refactored with strtok
     for (int i = 0; i < messageLength; i++) {
         if (message[i] == ',' || message[i] == '*') {
             int fragmentLength = i - fragmentStartIndex;

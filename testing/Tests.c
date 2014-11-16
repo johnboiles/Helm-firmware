@@ -52,6 +52,12 @@ TEST_CASE( "NMEAMessageVHW is constructed properly" ) {
     REQUIRE( std::string(vhw.message()) == std::string("$STVHW,,T,,M,6.4,N,,K*7E\r\n") );
 }
 
+TEST_CASE( "NMEAMessageHDM is constructed properly" ) {
+    NMEAMessageHDM hdm = NMEAMessageHDM(236.3);
+    REQUIRE( strlen(hdm.message()) == 19);
+    REQUIRE( std::string(hdm.message()) == std::string("$STHDM,236.3,M*21\r\n") );
+}
+
 TEST_CASE( "SeaTalkMessageWindAngle is parsed properly" ) {
     uint8_t message[4] = {0x10, 0x11, 0x02, 0x6E};
     SeaTalkMessageWindAngle windAngle = SeaTalkMessageWindAngle(message);
@@ -156,6 +162,28 @@ TEST_CASE( "SeaTalkMessageSpeedThroughWater is parsed properly" ) {
     uint8_t message[4] = {0x20, 0x41, 0x35, 0x00};
     SeaTalkMessageSpeedThroughWater stw = SeaTalkMessageSpeedThroughWater(message);
     REQUIRE( stw.speed() == 5.3 );
+}
+
+TEST_CASE( "SeaTalkMessageCompassHeadingAutopilotCourseRudderPosition is parsed properly" ) {
+    // Actual data from ST1000
+    uint8_t message[9] = {0x84, 0xA6, 0x1C, 0x00, 0x04, 0x00, 0xFC, 0x00, 0x08};
+    SeaTalkMessageCompassHeadingAutopilotCourseRudderPosition apinfo = SeaTalkMessageCompassHeadingAutopilotCourseRudderPosition(message);
+    REQUIRE( apinfo.compassHeading() == 237 );
+    REQUIRE( apinfo.autopilotCourse() == 0 );
+    REQUIRE( apinfo.isVaneMode() == true );
+    REQUIRE( apinfo.isAutoMode() == false );
+}
+
+TEST_CASE( "SeaTalkMessageCompassHeadingAndRudderPosition is parsed properly" ) {
+    uint8_t message[4] = {0x9C, 0xA1, 0x1C, 0xFC};
+    SeaTalkMessageCompassHeadingAndRudderPosition heading = SeaTalkMessageCompassHeadingAndRudderPosition(message);
+    REQUIRE( heading.compassHeading() == 237 );
+}
+
+TEST_CASE( "SeaTalkMessageCompassHeadingAndRudderPosition is generated properly" ) {
+    uint8_t expected[4] = {0x9C, 0xA1, 0x1C, 0x00};
+    SeaTalkMessageCompassHeadingAndRudderPosition heading = SeaTalkMessageCompassHeadingAndRudderPosition(237, false, 0);
+    assertEqualSeaTalkMessages(&heading, expected, sizeof(expected));
 }
 
 TEST_CASE( "SeaTalkMessageDeviceQuery is generated properly" ) {

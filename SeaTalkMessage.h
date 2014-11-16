@@ -17,6 +17,8 @@ typedef enum {
     SeaTalkMessageTypeSpeedOverGround = 0x52,
     SeaTalkMessageTypeMagneticCourse = 0x53,
     SeaTalkMessageTypeTime = 0x54,
+    SeaTalkMessageTypeCompassHeadingAutopilotCourseRudderPosition = 0x84,
+    SeaTalkMessageTypeCompassHeadingAndRudderPosition = 0x9C,
     SeaTalkMessageTypeDeviceQuery = 0xA4
 } SeaTalkMessageType;
 
@@ -138,6 +140,86 @@ public:
     SeaTalkMessageDate(Date date);
     int messageLength() { return 4; }
     Date date();
+};
+
+// 84  U6  VW  XY 0Z 0M RR SS TT  Compass heading  Autopilot course and 
+// Rudder position (see also command 9C) 
+// Compass heading in degrees: 
+//   The two lower  bits of  U * 90 + 
+//   the six lower  bits of VW *  2 + 
+//   number of bits set in the two higher bits of U = 
+//   (U & 0x3)* 90 + (VW & 0x3F)* 2 + (U & 0xC ? (U & 0xC == 0xC ? 2 : 1): 0) 
+// Turning direction: 
+//   Most significant bit of U = 1: Increasing heading, Ship turns right 
+//   Most significant bit of U = 0: Decreasing heading, Ship turns left 
+// Autopilot course in degrees: 
+//   The two higher bits of  V * 90 + XY / 2 
+// Z & 0x2 = 0 : Autopilot in Standby-Mode 
+// Z & 0x2 = 2 : Autopilot in Auto-Mode 
+// Z & 0x4 = 4 : Autopilot in Vane Mode (WindTrim), requires regular "10" datagrams 
+// Z & 0x8 = 8 : Autopilot in Track Mode
+// M: Alarms + audible beeps 
+//   M & 0x04 = 4 : Off course 
+//   M & 0x08 = 8 : Wind Shift
+// Rudder position: RR degrees (positive values steer right, 
+//   negative values steer left. Example: 0xFE = 2° left) 
+// SS & 0x01 : when set, turns off heading display on 600R control. 
+// SS & 0x02 : always on with 400G 
+// SS & 0x08 : displays “NO DATA” on 600R 
+// SS & 0x10 : displays “LARGE XTE” on 600R 
+// SS & 0x80 : Displays “Auto Rel” on 600R 
+// TT : Always 0x08 on 400G computer, always 0x05 on 150(G) computer 
+class SeaTalkMessageCompassHeadingAutopilotCourseRudderPosition : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageCompassHeadingAutopilotCourseRudderPosition(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {}
+    int messageLength() { return 9; }
+    int compassHeading() {
+        int heading = ((_message[1] & 0x30) >> 4) * 90;
+        heading += (_message[2] & 0x3F) * 2;
+        heading += (_message[1] & 0x80) >> 7;
+        return heading;
+    }
+    bool isTurningRight() { return (_message[1] & 0x80) == 0x80; }
+    int autopilotCourse() {
+        return ((_message[2] & 0xC0) >> 6) * 90 + (_message[3] / 2);
+    }
+    bool isAutoMode() {
+        return (_message[4] & 0x2) == 0x2;
+    }
+    bool isVaneMode() {
+        return (_message[4] & 0x4) == 0x4;
+    }
+    bool isTrackMode() {
+        return (_message[4] & 0x8) == 0x8;
+    }
+};
+
+ // 9C  U1  VW  RR    Compass heading and Rudder position (see also command 84) 
+ // Compass heading in degrees: 
+ //   The two lower  bits of  U * 90 + 
+ //   the six lower  bits of VW *  2 + 
+ //   number of bits set in the two higher bits of U = 
+ //   (U & 0x3)* 90 + (VW & 0x3F)* 2 + (U & 0xC ? (U & 0xC == 0xC ? 2 : 1): 0) 
+ // Turning direction: 
+ //   Most significant bit of U = 1: Increasing heading, Ship turns right 
+ //   Most significant bit of U = 0: Decreasing heading, Ship turns left 
+ // Rudder position: RR degrees (positive values steer right, 
+ //   negative values steer left. Example: 0xFE = 2° left) 
+class SeaTalkMessageCompassHeadingAndRudderPosition : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageCompassHeadingAndRudderPosition(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {}
+    SeaTalkMessageCompassHeadingAndRudderPosition(int compassHeading, bool isTurningRight, int rudderPosition);
+    int messageLength() { return 4; }
+    int compassHeading() {
+        int heading = ((_message[1] & 0x30) >> 4) * 90;
+        heading += (_message[2] & 0x3F) * 2;
+        heading += (_message[1] & 0x80) >> 7;
+        return heading;
+    }
+    bool isTurningRight() { return (_message[1] & 0x40) == 0x80; }
+    int rudderPosition() { return (int)_message[3]; }
 };
 
 class SeaTalkMessageDeviceQuery : public BaseSeaTalkMessage

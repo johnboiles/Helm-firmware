@@ -75,4 +75,13 @@ public:
 };
 
 
+//! Magnetic Heading
+class NMEAMessageHDM : public BaseNMEAMessage
+{
+public:
+    //! Magnetic heading in degrees
+    NMEAMessageHDM(float degrees);
+};
+
+
 #endif

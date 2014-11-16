@@ -160,6 +160,16 @@ Date SeaTalkMessageDate::date() {
     return date;
 }
 
+SeaTalkMessageCompassHeadingAndRudderPosition::SeaTalkMessageCompassHeadingAndRudderPosition(int compassHeading, bool isTurningRight, int rudderPosition) : BaseSeaTalkMessage(this->messageLength()) {
+    _message[0] = 0x9C;
+    _message[1] = isTurningRight ? 0x41 : 0x01;
+    int quadrant = compassHeading / 90;
+    _message[1] |= quadrant << 4;
+    _message[1] |= (compassHeading % 2) << 7;
+    _message[2] = 0x3F & ((compassHeading - quadrant * 90) / 2);
+    _message[3] = rudderPosition;
+}
+
 SeaTalkMessageDeviceQuery::SeaTalkMessageDeviceQuery() : BaseSeaTalkMessage(this->messageLength()) {
     _message[0] = 0xA4;
     _message[1] = 0x02;

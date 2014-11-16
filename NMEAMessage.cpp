@@ -80,3 +80,9 @@ NMEAMessageVHW::NMEAMessageVHW(float knots) : BaseNMEAMessage() {
     sprintf(_message, "$STVHW,,T,,M,%.1f,N,,K", knots);
     closeMessage(_message);
 }
+
+
+NMEAMessageHDM::NMEAMessageHDM(float heading) : BaseNMEAMessage() {
+    sprintf(_message, "$STHDM,%.1f,M", heading);
+    closeMessage(_message);
+}

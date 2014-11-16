@@ -111,6 +111,10 @@ void loop() {
                 SeaTalkMessageSpeedThroughWater *speedMessage = (SeaTalkMessageSpeedThroughWater *)message;
                 NMEAMessageVHW vhw = NMEAMessageVHW(speedMessage->speed());
                 OUTPUT_SERIAL.print(vhw.message());
+            } else if (messageType == SeaTalkMessageTypeCompassHeadingAndRudderPosition) {
+                SeaTalkMessageCompassHeadingAndRudderPosition *headingMessage = (SeaTalkMessageCompassHeadingAndRudderPosition *)message;
+                NMEAMessageHDM hdm = NMEAMessageHDM(headingMessage->compassHeading());
+                OUTPUT_SERIAL.print(hdm.message());
             }
             delete[] message;
         }

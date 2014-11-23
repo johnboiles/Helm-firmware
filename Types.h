@@ -13,4 +13,21 @@ typedef struct {
     int year;
 } Date;
 
+typedef struct {
+    float degrees;
+    bool isMagnetic;
+} Heading;
+
+typedef enum {
+    StatusActive = 'A',
+    StatusVoid = 'V',
+    StatusUnknown = 0
+} Status;
+
+typedef enum {
+    LateralityLeft = 'L',
+    LateralityRight = 'R',
+    LateralityUnknown = 0
+} Laterality;
+
 #endif

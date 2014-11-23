@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <cstring>
 #include "types.h"
+#include <ctype.h>
+
 
 int calculateChecksum(char *message, size_t length) {
   int c = 0;
-    for (int i = 0; i < length; i++) {
+    for (size_t i = 0; i < length; i++) {
         c ^= message[i];
     }
     return c;
@@ -21,7 +23,7 @@ double degreesFromCoordinateString(const char *string, char direction) {
     if (length < 3) {
         return 0.0;
     }
-    int decimalIndex = strchr(string, '.') - string;
+    int decimalIndex = (int)(strchr(string, '.') - string);
     double minutes = atof(&(string[decimalIndex - 2]));
     int i = decimalIndex - 3;
     int degrees = 0;
@@ -44,7 +46,7 @@ void splitMessageIntoFragments(const char *message, size_t messageLength, char *
 
     // Split into fragments by commas
     // TODO: This could maybe be significantly refactored with strtok
-    for (int i = 0; i < messageLength; i++) {
+    for (int i = 0; i < (int)messageLength; i++) {
         if (message[i] == ',' || message[i] == '*') {
             int fragmentLength = i - fragmentStartIndex;
             char *fragment;
@@ -73,4 +75,31 @@ Time timeFromString(const char *timeString) {
     // TODO: Can't figure out how to read floats with sscanf
     time.second = atof(&timeString[4]);
     return time;
+}
+
+Heading headingFromFragments(const char *degrees, const char *trueOrMagnetic) {
+    Heading heading;
+    heading.degrees = atof(degrees);
+    heading.isMagnetic = toupper(trueOrMagnetic[0]) == 'M' ? true : false;
+    return heading;
+}
+
+Laterality lateralityFromFragment(const char *fragment) {
+    if (toupper(fragment[0] == 'L')) {
+        return LateralityLeft;
+    } else if (toupper(fragment[0] == 'R')) {
+        return LateralityRight;
+    } else {
+        return LateralityUnknown;
+    }
+}
+
+Status statusFromFragment(const char *fragment) {
+    if (toupper(fragment[0]) == 'V') {
+        return StatusVoid;
+    } else if (toupper(fragment[0]) == 'A') {
+        return StatusActive;
+    } else {
+        return StatusUnknown;
+    }
 }

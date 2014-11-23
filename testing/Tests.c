@@ -60,9 +60,9 @@ TEST_CASE( "NMEAMessageHDM is constructed properly" ) {
 
 TEST_CASE( "NMEAMessageRMB is parsed properly" ) {
     NMEAMessageRMB rmb = NMEAMessageRMB("$ECRMB,A,0.000,L,tospace,001,3751.944,N,12219.721,W,0.596,266.197,0.055,V*37\r\n");
-    REQUIRE( rmb.status() == ACTIVE );
+    REQUIRE( rmb.status() == StatusActive );
     REQUIRE( rmb.xte() == 0.0 );
-    REQUIRE( rmb.directionToSteer() == LEFT );
+    REQUIRE( rmb.directionToSteer() == LateralityLeft );
     REQUIRE( rmb.toWaypointID() == std::string("tospace") );
     REQUIRE( rmb.fromWaypointID() == std::string("001") );
     REQUIRE( rmb.destinationLatitude() == 37.86573333333333333);
@@ -70,6 +70,23 @@ TEST_CASE( "NMEAMessageRMB is parsed properly" ) {
     REQUIRE( rmb.rangeToDestiation() == 0.596f );
     REQUIRE( rmb.bearingToDestination() == 266.197f);
     REQUIRE( rmb.destinationClosingVelocity() == 0.055f);
+}
+
+TEST_CASE( "NMEAMessageAPB is parsed properly" ) {
+    NMEAMessageAPB apb = NMEAMessageAPB("$ECAPB,A,A,2.345,L,N,V,V,266.243,T,001,266.197,T,266.197,T*35");
+    REQUIRE( apb.isUnreliableFix() == false );
+    REQUIRE( apb.isCycleLockWarning() == false );
+    REQUIRE( apb.xte() == 2.345f );
+    REQUIRE( apb.directionToSteer() == LateralityLeft );
+    REQUIRE( apb.isArrived() == false );
+    REQUIRE( apb.isPerpendicualrPassed() == false );
+    REQUIRE( apb.bearingOriginToDestination().degrees == 266.243f );
+    REQUIRE( apb.bearingOriginToDestination().isMagnetic == false );
+    REQUIRE( apb.destinationWaypointID() == std::string("001") );
+    REQUIRE( apb.bearingPresentToDestination().degrees == 266.197f );
+    REQUIRE( apb.bearingPresentToDestination().isMagnetic == false );
+    REQUIRE( apb.headingToSteerToWaypoint().degrees == 266.197f );
+    REQUIRE( apb.headingToSteerToWaypoint().isMagnetic == false );
 }
 
 TEST_CASE( "SeaTalkMessageWindAngle is parsed properly" ) {

@@ -13,4 +13,10 @@ void splitMessageIntoFragments(const char *message, size_t messageLength, char *
 
 Time timeFromString(const char *timeString);
 
+Heading headingFromFragments(const char *degrees, const char *trueOrMagnetic);
+
+Laterality lateralityFromFragment(const char *fragment);
+
+Status statusFromFragment(const char *fragment);
+
 #endif

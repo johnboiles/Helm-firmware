@@ -40,9 +40,9 @@ NMEAMessageGLL::NMEAMessageGLL(const char *message) : BaseNMEAMessage() {
     _latitude = degreesFromCoordinateString(fragments[1], fragments[2][0]);
     _longitude = degreesFromCoordinateString(fragments[3], fragments[4][0]);
     _time = timeFromString(fragments[5]);
+
     for (int i = 0; i < fragmentCount; i++) {
       free(fragments[i]);
-      // Serial.println(fragments[i]);
     }
 }
 
@@ -52,21 +52,11 @@ NMEAMessageRMB::NMEAMessageRMB(const char *message) : BaseNMEAMessage() {
     int fragmentCount = 0;
     splitMessageIntoFragments(message, strlen(message), fragments, &fragmentCount);
 
-    if (fragments[1][0] == VOID) {
-        _status = VOID;
-    } else {
-        _status = ACTIVE;
-    }
+    _status = statusFromFragment(fragments[1]);
     _xte = atof(fragments[2]);
-    if (fragments[3][0] == 'L') {
-        _directionToSteer = LEFT;
-    } else if (fragments[3][0] == 'R') {
-        _directionToSteer = RIGHT;
-    } else {
-        _directionToSteer = UNKNOWN;
-    }
-    strncpy(_toWaypointID, fragments[4], min(sizeof(_toWaypointID) - 1, strlen(fragments[4])) + 1);
-    strncpy(_fromWaypointID, fragments[5], min(sizeof(_fromWaypointID) - 1, strlen(fragments[5])) + 1);
+    _directionToSteer = lateralityFromFragment(fragments[3]);
+    COPY_STRING(_toWaypointID, fragments[4]);
+    COPY_STRING(_fromWaypointID, fragments[5]);
     _destinationLatitude = degreesFromCoordinateString(fragments[6], fragments[7][0]);
     _destinationLongitude = degreesFromCoordinateString(fragments[8], fragments[9][0]);
     _rangeToDestiation = atof(fragments[10]);
@@ -74,11 +64,8 @@ NMEAMessageRMB::NMEAMessageRMB(const char *message) : BaseNMEAMessage() {
     _destinationClosingVelocity = atof(fragments[12]);
     _isArrived = fragments[13][0] == 'A' ? true : false;
 
-    // TODO: Verify checksum
-
     for (int i = 0; i < fragmentCount; i++) {
         free(fragments[i]);
-        // Serial.println(fragments[i]);
     }
 }
 
@@ -89,7 +76,7 @@ NMEAMessageRMC::NMEAMessageRMC(const char *message) : BaseNMEAMessage() {
     splitMessageIntoFragments(message, strlen(message), fragments, &fragmentCount);
 
     _time = timeFromString(fragments[1]);
-    // TODO: Parse status (fragments[2])
+    _status = statusFromFragment(fragments[2]);
     _latitude = degreesFromCoordinateString(fragments[3], fragments[4][0]);
     _longitude = degreesFromCoordinateString(fragments[5], fragments[6][0]);
     _speedOverGround = atof(fragments[7]);
@@ -121,4 +108,27 @@ NMEAMessageVHW::NMEAMessageVHW(float knots) : BaseNMEAMessage() {
 NMEAMessageHDM::NMEAMessageHDM(float heading) : BaseNMEAMessage() {
     sprintf(_message, "$STHDM,%.1f,M", heading);
     closeMessage(_message);
+}
+
+
+NMEAMessageAPB::NMEAMessageAPB(const char *message) : BaseNMEAMessage() {
+    char *fragments[15];
+    int fragmentCount = 0;
+    splitMessageIntoFragments(message, strlen(message), fragments, &fragmentCount);
+
+    _isUnreliableFix = fragments[1][0] == 'V' ? true : false;
+    _isCycleLockWarning = fragments[2][0] == 'V' ? true : false;
+    _xte = atof(fragments[3]);
+    _directionToSteer = lateralityFromFragment(fragments[4]);
+    // TODO: Do XTE units ever change? If so, implement units for XTE
+    _isArrived = fragments[6][0] == 'A' ? true : false;
+    _isPerpendicularPassed = fragments[7][0] == 'A' ? true : false;
+    _bearingOriginToDestination = headingFromFragments(fragments[8], fragments[9]);
+    COPY_STRING(_destinationWaypointID, fragments[10]);
+    _bearingPresentToDestination = headingFromFragments(fragments[11], fragments[12]);
+    _headingToSteerToWaypoint = headingFromFragments(fragments[13], fragments[14]);
+
+    for (int i = 0; i < fragmentCount; i++) {
+        free(fragments[i]);
+    }
 }

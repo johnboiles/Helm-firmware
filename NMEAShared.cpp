@@ -5,7 +5,7 @@
 #include <cstring>
 #include "types.h"
 
-int calculateChecksum(char *message, int length) {
+int calculateChecksum(char *message, size_t length) {
   int c = 0;
     for (int i = 0; i < length; i++) {
         c ^= message[i];
@@ -17,7 +17,7 @@ int calculateChecksum(char *message, int length) {
 //  Then the rest is minutes
 double degreesFromCoordinateString(const char *string, char direction) {
     // Edge case, don't process strings that are too short
-    int length = strlen(string);
+    size_t length = strlen(string);
     if (length < 3) {
         return 0.0;
     }
@@ -38,7 +38,7 @@ double degreesFromCoordinateString(const char *string, char direction) {
     return coordinate;
 }
 
-void splitMessageIntoFragments(const char *message, int messageLength, char **fragments, int *fragmentCount) {
+void splitMessageIntoFragments(const char *message, size_t messageLength, char **fragments, int *fragmentCount) {
     *fragmentCount = 0;
     int fragmentStartIndex = 0;
 

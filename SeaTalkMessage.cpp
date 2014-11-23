@@ -1,6 +1,6 @@
 #include "SeaTalkMessage.h"
 #include <cstring>
-#include <Arduino.h>
+#include "Arduino.h"
 #include "math.h"
 
 

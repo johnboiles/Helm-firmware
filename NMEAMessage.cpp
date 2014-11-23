@@ -7,7 +7,7 @@
 
 
 void closeMessage(char *message) {
-    int messageLength = strlen(message);
+    size_t messageLength = strlen(message);
     int checksum = calculateChecksum(&(message[1]), messageLength - 1);
     message[messageLength++] = '*';
     sprintf(&(message[messageLength]), "%2X", checksum);
@@ -43,6 +43,42 @@ NMEAMessageGLL::NMEAMessageGLL(const char *message) : BaseNMEAMessage() {
     for (int i = 0; i < fragmentCount; i++) {
       free(fragments[i]);
       // Serial.println(fragments[i]);
+    }
+}
+
+
+NMEAMessageRMB::NMEAMessageRMB(const char *message) : BaseNMEAMessage() {
+    char *fragments[15];
+    int fragmentCount = 0;
+    splitMessageIntoFragments(message, strlen(message), fragments, &fragmentCount);
+
+    if (fragments[1][0] == VOID) {
+        _status = VOID;
+    } else {
+        _status = ACTIVE;
+    }
+    _xte = atof(fragments[2]);
+    if (fragments[3][0] == 'L') {
+        _directionToSteer = LEFT;
+    } else if (fragments[3][0] == 'R') {
+        _directionToSteer = RIGHT;
+    } else {
+        _directionToSteer = UNKNOWN;
+    }
+    strncpy(_toWaypointID, fragments[4], min(sizeof(_toWaypointID) - 1, strlen(fragments[4])) + 1);
+    strncpy(_fromWaypointID, fragments[5], min(sizeof(_fromWaypointID) - 1, strlen(fragments[5])) + 1);
+    _destinationLatitude = degreesFromCoordinateString(fragments[6], fragments[7][0]);
+    _destinationLongitude = degreesFromCoordinateString(fragments[8], fragments[9][0]);
+    _rangeToDestiation = atof(fragments[10]);
+    _bearingToDestination = atof(fragments[11]);
+    _destinationClosingVelocity = atof(fragments[12]);
+    _isArrived = fragments[13][0] == 'A' ? true : false;
+
+    // TODO: Verify checksum
+
+    for (int i = 0; i < fragmentCount; i++) {
+        free(fragments[i]);
+        // Serial.println(fragments[i]);
     }
 }
 

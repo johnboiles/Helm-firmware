@@ -3,6 +3,17 @@
 
 #include "types.h"
 
+typedef enum {
+    ACTIVE = 'A',
+    VOID = 'V'
+} STATUS;
+
+typedef enum {
+    LEFT = 'L',
+    RIGHT = 'R',
+    UNKNOWN = 0
+} LEFT_OR_RIGHT;
+
 class BaseNMEAMessage
 {
 public:
@@ -31,11 +42,40 @@ private:
     Time _time;
 };
 
+
+class NMEAMessageRMB : public BaseNMEAMessage
+{
+public:
+    NMEAMessageRMB(const char *message);
+    STATUS status() { return _status; }
+    float xte() { return _xte; }
+    LEFT_OR_RIGHT directionToSteer() { return _directionToSteer; }
+    char *toWaypointID() { return _toWaypointID; }
+    char *fromWaypointID() { return _fromWaypointID; }
+    double destinationLatitude() { return _destinationLatitude; }
+    double destinationLongitude() { return _destinationLongitude; }
+    float rangeToDestiation() { return _rangeToDestiation; }
+    float bearingToDestination() { return _bearingToDestination; }
+    float destinationClosingVelocity() { return _destinationClosingVelocity; }
+    bool isArrived() { return _isArrived; }
+private:
+    STATUS _status;
+    float _xte;
+    LEFT_OR_RIGHT _directionToSteer;
+    char _toWaypointID[20];
+    char _fromWaypointID[20];
+    double _destinationLatitude;
+    double _destinationLongitude;
+    float _rangeToDestiation;
+    float _bearingToDestination;
+    float _destinationClosingVelocity;
+    bool _isArrived;
+};
+
 class NMEAMessageRMC : public BaseNMEAMessage
 {
 public:
     NMEAMessageRMC(const char *message);
-    // TODO: Maybe create a time struct
     Time time() { return _time; }
     // TODO: Status
     double latitude() { return _latitude; }

@@ -9,6 +9,10 @@
 #define OCT 8
 #define BIN 2
 
+#ifndef min
+#define min(a, b) (a < b ? a : b)
+#endif
+
 class MockSerial
 {
 public:

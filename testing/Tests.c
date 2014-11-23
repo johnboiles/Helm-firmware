@@ -58,6 +58,20 @@ TEST_CASE( "NMEAMessageHDM is constructed properly" ) {
     REQUIRE( std::string(hdm.message()) == std::string("$STHDM,236.3,M*21\r\n") );
 }
 
+TEST_CASE( "NMEAMessageRMB is parsed properly" ) {
+    NMEAMessageRMB rmb = NMEAMessageRMB("$ECRMB,A,0.000,L,tospace,001,3751.944,N,12219.721,W,0.596,266.197,0.055,V*37\r\n");
+    REQUIRE( rmb.status() == ACTIVE );
+    REQUIRE( rmb.xte() == 0.0 );
+    REQUIRE( rmb.directionToSteer() == LEFT );
+    REQUIRE( rmb.toWaypointID() == std::string("tospace") );
+    REQUIRE( rmb.fromWaypointID() == std::string("001") );
+    REQUIRE( rmb.destinationLatitude() == 37.86573333333333333);
+    REQUIRE( rmb.destinationLongitude() == -122.32868333333333);
+    REQUIRE( rmb.rangeToDestiation() == 0.596f );
+    REQUIRE( rmb.bearingToDestination() == 266.197f);
+    REQUIRE( rmb.destinationClosingVelocity() == 0.055f);
+}
+
 TEST_CASE( "SeaTalkMessageWindAngle is parsed properly" ) {
     uint8_t message[4] = {0x10, 0x11, 0x02, 0x6E};
     SeaTalkMessageWindAngle windAngle = SeaTalkMessageWindAngle(message);

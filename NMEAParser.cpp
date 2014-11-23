@@ -1,7 +1,7 @@
 #include "NMEAParser.h"
 #include <cstring>
 #include "NMEAShared.h"
-#include <Arduino.h>
+#include "Arduino.h"
 #include "ctype.h"
 
 typedef enum {

@@ -1,6 +1,6 @@
 #include "SeaTalkParser.h"
 #include <cstring>
-#include <Arduino.h>
+#include "Arduino.h"
 
 
 typedef enum {

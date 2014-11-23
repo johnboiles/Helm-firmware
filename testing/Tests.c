@@ -205,6 +205,16 @@ TEST_CASE( "SeaTalkMessageCompassHeadingAutopilotCourseRudderPosition is parsed 
     REQUIRE( apinfo.isAutoMode() == false );
 }
 
+TEST_CASE( "SeaTalkMessageNavigationToWaypoint is generated properly" ) {
+    // Created from the examples in the Knauf doc
+    uint8_t expected[9] = {0x85, 0x56, 0x10, 0x42, 0x16, 0x20, 0x17, 0x00, 0xE8};
+    Heading bearingToDestination;
+    bearingToDestination.degrees = 230;
+    bearingToDestination.isMagnetic = true;
+    SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(2.61, bearingToDestination, 5.13, LateralityLeft, 0x7);
+    assertEqualSeaTalkMessages(&nav, expected, sizeof(expected));
+}
+
 TEST_CASE( "SeaTalkMessageCompassHeadingAndRudderPosition is parsed properly" ) {
     uint8_t message[4] = {0x9C, 0xA1, 0x1C, 0xFC};
     SeaTalkMessageCompassHeadingAndRudderPosition heading = SeaTalkMessageCompassHeadingAndRudderPosition(message);

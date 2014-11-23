@@ -5,6 +5,7 @@
 
 
 BaseSeaTalkMessage::BaseSeaTalkMessage(int messageLength) {
+    memset(_message, 0, sizeof(_message));
     _messageLength = messageLength;
 }
 
@@ -158,6 +159,33 @@ Date SeaTalkMessageDate::date() {
     date.day = _message[2];
     date.year = _message[3];
     return date;
+}
+
+SeaTalkMessageNavigationToWaypoint::SeaTalkMessageNavigationToWaypoint(float xte, Heading bearingToDestination, float distanceToDestination, Laterality directionToSteer, int trackControlMode) : BaseSeaTalkMessage(this->messageLength()) {
+    _message[0] = 0x85;
+    int xteInt = xte * 100;
+    _message[1] = ((xteInt & 0xF) << 4) | 0x6;
+    _message[2] = (xteInt >> 4) & 0xFF;
+    int quadrant = bearingToDestination.degrees / 90;
+    _message[3] = (quadrant & 0x3) | (!bearingToDestination.isMagnetic ? 0x8 : 0);
+    int degreesInQuadrant = (bearingToDestination.degrees - (quadrant * 90)) * 2;
+    _message[3] |= (degreesInQuadrant & 0xF) << 4;
+    _message[4] = (degreesInQuadrant >> 4) & 0xF;
+    int distanceInt;
+    bool lessThan10;
+    if (distanceToDestination < 10.0) {
+        distanceInt = distanceToDestination * 100;
+        lessThan10 = true;
+    } else {
+        distanceInt = distanceToDestination * 10;
+        lessThan10 = false;
+    }
+    _message[4] |= (distanceInt & 0xF) << 4;
+    _message[5] = (distanceInt >> 4) & 0xFF;
+    _message[6] = lessThan10 ? 0x10 : 0;
+    _message[6] |= directionToSteer == LateralityRight ? 0x40 : 0;
+    _message[6] |= (trackControlMode & 0xF);
+    _message[8] = _message[6] ^ 0xFF;
 }
 
 SeaTalkMessageMagneticVariation::SeaTalkMessageMagneticVariation(int variation) : BaseSeaTalkMessage(this->messageLength()) {

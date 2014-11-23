@@ -160,6 +160,12 @@ Date SeaTalkMessageDate::date() {
     return date;
 }
 
+SeaTalkMessageMagneticVariation::SeaTalkMessageMagneticVariation(int variation) : BaseSeaTalkMessage(this->messageLength()) {
+    _message[0] = 0x99;
+    _message[1] = 0x00;
+    _message[2] = variation & 0xFF;
+}
+
 SeaTalkMessageCompassHeadingAndRudderPosition::SeaTalkMessageCompassHeadingAndRudderPosition(int compassHeading, bool isTurningRight, int rudderPosition) : BaseSeaTalkMessage(this->messageLength()) {
     _message[0] = 0x9C;
     _message[1] = isTurningRight ? 0x41 : 0x01;

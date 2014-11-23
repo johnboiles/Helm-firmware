@@ -14,6 +14,7 @@
 
 NMEAParser GPS_PARSER;
 NMEAParser AIS_PARSER;
+NMEAParser INPUT_PARSER;
 SeaTalkParser SEATALK_PARSER;
 
 // TODO: I should make some sort of boat state object
@@ -74,17 +75,21 @@ void loop() {
                     SEND_SEATALK_MESSAGE(seaTalkMessageTime);
                     SeaTalkMessageDate seaTalkMessageDate(rmc.date());
                     SEND_SEATALK_MESSAGE(seaTalkMessageDate);
+                    SeaTalkMessageMagneticVariation magneticVariation(-13);
+                    SEND_SEATALK_MESSAGE(magneticVariation);
                 }
             }
         }
     }
-    // if (OUTPUT_SERIAL.available()) {
-    //     digitalWrite(DEBUG_LED, HIGH);
-    //     uint8_t incomingByte = OUTPUT_SERIAL.read();
-    //     // GPS_SERIAL.write(incomingByte);
-    //     // NMEA_HS_SERIAL.write(incomingByte);
-    //     SEATALK_SERIAL.write9bit(incomingByte + 256);
-    // }
+    if (OUTPUT_SERIAL.available()) {
+        // Consume incoming bytes. Teensy seems to crash otherwise
+        uint8_t incomingByte = OUTPUT_SERIAL.read();
+        bool complete = INPUT_PARSER.parse(incomingByte);
+        if (complete) {
+            const char *message = INPUT_PARSER.message();
+            OUTPUT_SERIAL.write(message);
+        }
+    }
     while (SEATALK_SERIAL.available()) {
         digitalWrite(DEBUG_LED, HIGH);
         int incomingByte = SEATALK_SERIAL.read();

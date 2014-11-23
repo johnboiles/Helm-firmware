@@ -195,17 +195,31 @@ public:
     }
 };
 
- // 9C  U1  VW  RR    Compass heading and Rudder position (see also command 84) 
- // Compass heading in degrees: 
- //   The two lower  bits of  U * 90 + 
- //   the six lower  bits of VW *  2 + 
- //   number of bits set in the two higher bits of U = 
- //   (U & 0x3)* 90 + (VW & 0x3F)* 2 + (U & 0xC ? (U & 0xC == 0xC ? 2 : 1): 0) 
- // Turning direction: 
- //   Most significant bit of U = 1: Increasing heading, Ship turns right 
- //   Most significant bit of U = 0: Decreasing heading, Ship turns left 
- // Rudder position: RR degrees (positive values steer right, 
- //   negative values steer left. Example: 0xFE = 2° left) 
+// 99  00  XX        Compass variation sent by ST40 compass instrument
+// or ST1000, ST2000, ST4000+, E-80 every 10 seconds
+// but only if the variation is set on the instrument
+// Positive XX values: Variation West, Negative XX values: Variation East
+// Examples (XX => variation): 00 => 0, 01 => -1 west, 02 => -2 west ...
+//                             FF => +1 east, FE => +2 east ...
+class SeaTalkMessageMagneticVariation : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageMagneticVariation(int variation);
+    int messageLength() { return 3; }
+    int varation() { return (int)_message[2]; }
+};
+
+ // 9C  U1  VW  RR    Compass heading and Rudder position (see also command 84)
+ // Compass heading in degrees:
+ //   The two lower  bits of  U * 90 +
+ //   the six lower  bits of VW *  2 +
+ //   number of bits set in the two higher bits of U =
+ //   (U & 0x3)* 90 + (VW & 0x3F)* 2 + (U & 0xC ? (U & 0xC == 0xC ? 2 : 1): 0)
+ // Turning direction:
+ //   Most significant bit of U = 1: Increasing heading, Ship turns right
+ //   Most significant bit of U = 0: Decreasing heading, Ship turns left
+ // Rudder position: RR degrees (positive values steer right,
+ //   negative values steer left. Example: 0xFE = 2° left)
 class SeaTalkMessageCompassHeadingAndRudderPosition : public BaseSeaTalkMessage
 {
 public:

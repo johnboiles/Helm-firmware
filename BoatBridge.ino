@@ -85,6 +85,7 @@ void loop() {
         }
     }
     if (OUTPUT_SERIAL.available()) {
+        digitalWrite(DEBUG_LED, HIGH);
         // Consume incoming bytes. Teensy seems to crash otherwise
         uint8_t incomingByte = OUTPUT_SERIAL.read();
         bool complete = INPUT_PARSER.parse(incomingByte);
@@ -92,8 +93,11 @@ void loop() {
             const char *message = INPUT_PARSER.message();
             // Route APB and RMB info to the SeaTalk network
             // TODO: Detect route info coming in from the SeaTalk network and handle more gracefully
-            // QUESTION: If I pass in APB and RMB messages into the Raymarine NMEA port, do those get magically translated too?
-            if (message[3] == 'A' && message[4] == 'P' && message[5] == 'B') {
+            if (message[3] == 'R' && message[4] == 'M' && message[5] == 'B') {
+                NMEAMessageRMB rmb = NMEAMessageRMB(message);
+                SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(rmb.xte(), rmb.bearingToDestination(), rmb.rangeToDestiation(), rmb.directionToSteer(), 0x7);
+                SEND_SEATALK_MESSAGE(nav);
+            } else if (message[3] == 'A' && message[4] == 'P' && message[5] == 'B') {
                 NMEAMessageAPB apb = NMEAMessageAPB(message);
                 SeaTalkMessageTargetWaypointName waypt = SeaTalkMessageTargetWaypointName(apb.destinationWaypointID());
                 SEND_SEATALK_MESSAGE(waypt);
@@ -101,14 +105,10 @@ void loop() {
                     SeaTalkMessageArrivalInfo arr = SeaTalkMessageArrivalInfo(apb.isPerpendicualrPassed(), apb.isArrived(), apb.destinationWaypointID());
                     SEND_SEATALK_MESSAGE(arr);
                 }
-            } else if (message[3] == 'R' && message[4] == 'M' && message[5] == 'B') {
-                NMEAMessageRMB rmb = NMEAMessageRMB(message);
-                SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(rmb.xte(), rmb.bearingToDestination(), rmb.rangeToDestiation(), rmb.directionToSteer(), 0x7);
-                SEND_SEATALK_MESSAGE(nav);
             }
         }
     }
-    while (SEATALK_SERIAL.available()) {
+    if (SEATALK_SERIAL.available()) {
         digitalWrite(DEBUG_LED, HIGH);
         int incomingByte = SEATALK_SERIAL.read();
         bool complete = SEATALK_PARSER.parse(incomingByte);

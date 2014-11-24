@@ -2,6 +2,7 @@
 #include "catch.hpp"
 #include "../NMEAMessage.h"
 #include "../SeaTalkMessage.h"
+#include "../SeaTalkParser.h"
 
 
 TEST_CASE( "NMEAMessageRMC is parsed properly" ) {
@@ -87,6 +88,18 @@ TEST_CASE( "NMEAMessageAPB is parsed properly" ) {
     REQUIRE( apb.bearingPresentToDestination().isMagnetic == false );
     REQUIRE( apb.headingToSteerToWaypoint().degrees == 266.197f );
     REQUIRE( apb.headingToSteerToWaypoint().isMagnetic == false );
+}
+
+TEST_CASE( "SeaTalkParser" ) {
+    SeaTalkParser parser = SeaTalkParser();
+    bool completed;
+    completed = parser.parse(0x199);
+    REQUIRE( completed == false );
+    completed = parser.parse(0x00);
+    REQUIRE( completed == false );
+    completed = parser.parse(0xF3);
+    REQUIRE( completed == true );
+    REQUIRE( parser.messageLength() == 3 );
 }
 
 TEST_CASE( "SeaTalkMessageWindAngle is parsed properly" ) {
@@ -231,6 +244,12 @@ TEST_CASE( "SeaTalkMessageNavigationToWaypoint is generated properly" ) {
     bearingToDestination.isMagnetic = true;
     SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(2.61, bearingToDestination, 5.13, LateralityLeft, 0x7);
     assertEqualSeaTalkMessages(&nav, expected, sizeof(expected));
+}
+
+TEST_CASE( "SeaTalkMessageMagneticVariation is generated properly" ) {
+    uint8_t expected[3] = {0x99, 0x00, 0xF3};
+    SeaTalkMessageMagneticVariation mv = SeaTalkMessageMagneticVariation(-13);
+    assertEqualSeaTalkMessages(&mv, expected, sizeof(expected));
 }
 
 TEST_CASE( "SeaTalkMessageCompassHeadingAndRudderPosition is parsed properly" ) {

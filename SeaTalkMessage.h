@@ -19,6 +19,7 @@ typedef enum {
     SeaTalkMessageTypeTime = 0x54,
     SeaTalkMessageTypeCompassHeadingAutopilotCourseRudderPosition = 0x84,
     SeaTalkMessageTypeNavigationToWaypoint = 0x85,
+    SeaTalkMessageTypeMagneticVariation = 0x99,
     SeaTalkMessageTypeCompassHeadingAndRudderPosition = 0x9C,
     SeaTalkMessageTypeDeviceQuery = 0xA4
 } SeaTalkMessageType;
@@ -269,6 +270,7 @@ private:
 class SeaTalkMessageMagneticVariation : public BaseSeaTalkMessage
 {
 public:
+    SeaTalkMessageMagneticVariation(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {}
     SeaTalkMessageMagneticVariation(int variation);
     int messageLength() { return 3; }
     int varation() { return (int)_message[2]; }

@@ -237,8 +237,8 @@ SeaTalkMessageDeviceQuery::SeaTalkMessageDeviceQuery() : BaseSeaTalkMessage(this
 }
 
 BaseSeaTalkMessage *newSeaTalkMessage(const uint8_t *message, int messageLength) {
-    // TODO: Assert that the message is the right length
-    switch (message[1]) {
+    // TODO: Assert that the message is the right length?
+    switch (message[0]) {
         case SeaTalkMessageTypeWindAngle:
             return new SeaTalkMessageWindAngle(message);
             break;
@@ -250,6 +250,9 @@ BaseSeaTalkMessage *newSeaTalkMessage(const uint8_t *message, int messageLength)
             break;
         case SeaTalkMessageTypeSpeedThroughWater:
             return new SeaTalkMessageSpeedThroughWater(message);
+            break;
+        case SeaTalkMessageTypeMagneticVariation:
+            return new SeaTalkMessageMagneticVariation(message);
             break;
         default:
             return new BaseSeaTalkMessage(message, messageLength);
@@ -264,8 +267,6 @@ void printSeaTalkMessage(uint8_t *message, int messageLength) {
         } else {
             Serial.printf("%02X ", message[i]);
         }
-        if (i == (messageLength - 1)) {
-             Serial.print("\r\n");
-        }
     }
+    Serial.print("\r\n");
 }

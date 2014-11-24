@@ -25,7 +25,6 @@ bool SeaTalkParser::parse(uint16_t c) {
     }
     // New messages have the 9th bit set
     if (c & 0x100) {
-        _state = SeaTalkParserStateReset;
         memset(_message, 0, sizeof(_message));
         _message[0] = c & 0xFF;
         _messageLength = 0;

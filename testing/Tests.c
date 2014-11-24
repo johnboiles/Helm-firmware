@@ -195,6 +195,24 @@ TEST_CASE( "SeaTalkMessageSpeedThroughWater is parsed properly" ) {
     REQUIRE( stw.speed() == 5.3 );
 }
 
+TEST_CASE( "SeaTalkMessageTargetWaypointName is parsed properly" ) {
+    uint8_t message[8] = {0x82, 0x05, 0x00, 0xFF, 0x00, 0xFF, 0x04, 0xFB};
+    SeaTalkMessageTargetWaypointName twn = SeaTalkMessageTargetWaypointName(message);
+    REQUIRE( twn.name() == std::string("0001") );
+}
+
+TEST_CASE( "SeaTalkMessageTargetWaypointName is generated properly" ) {
+    uint8_t expected[8] = {0x82, 0x05, 0x00, 0xFF, 0x00, 0xFF, 0x04, 0xFB};
+    SeaTalkMessageTargetWaypointName twn = SeaTalkMessageTargetWaypointName("0001");
+    assertEqualSeaTalkMessages(&twn, expected, sizeof(expected));
+}
+
+TEST_CASE( "SeaTalkMessageTargetWaypointName loopback test" ) {
+    SeaTalkMessageTargetWaypointName twn = SeaTalkMessageTargetWaypointName("asDf");
+    SeaTalkMessageTargetWaypointName twn2 = SeaTalkMessageTargetWaypointName(twn.message());
+    REQUIRE( twn2.name() == std::string("ASDF") );
+}
+
 TEST_CASE( "SeaTalkMessageCompassHeadingAutopilotCourseRudderPosition is parsed properly" ) {
     // Actual data from ST1000
     uint8_t message[9] = {0x84, 0xA6, 0x1C, 0x00, 0x04, 0x00, 0xFC, 0x00, 0x08};

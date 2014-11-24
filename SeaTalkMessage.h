@@ -143,7 +143,26 @@ public:
     Date date();
 };
 
-// 84  U6  VW  XY 0Z 0M RR SS TT  Compass heading  Autopilot course and 
+// 82  05  XX  xx YY yy ZZ zz   Target waypoint name
+// XX+xx = YY+yy = ZZ+zz = FF (allows error detection)
+// Takes the last 4 chars of name, assumes upper case only
+// Char= ASCII-Char - 0x30
+// XX&0x3F: char1
+// (YY&0xF)*4+(XX&0xC0)/64: char2
+// (ZZ&0x3)*16+(YY&0xF0)/16: char3
+// (ZZ&0xFC)/4: char4
+class SeaTalkMessageTargetWaypointName : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageTargetWaypointName(const char *name);
+    SeaTalkMessageTargetWaypointName(const uint8_t *message);
+    int messageLength() { return 8; }
+    char *name() { return _name; }
+private:
+    char _name[5];
+};
+
+// 84  U6  VW  XY 0Z 0M RR SS TT  Compass heading  Autopilot course and
 // Rudder position (see also command 9C) 
 // Compass heading in degrees: 
 //   The two lower  bits of  U * 90 + 

@@ -2,6 +2,7 @@
 #include <cstring>
 #include "Arduino.h"
 #include "math.h"
+#include <ctype.h>
 
 
 BaseSeaTalkMessage::BaseSeaTalkMessage(int messageLength) {
@@ -159,6 +160,29 @@ Date SeaTalkMessageDate::date() {
     date.day = _message[2];
     date.year = _message[3];
     return date;
+}
+
+SeaTalkMessageTargetWaypointName::SeaTalkMessageTargetWaypointName(const char *name) : BaseSeaTalkMessage(this->messageLength()) {
+    uint8_t stName[4];
+    for (int i = 0; i < 4; i++) {
+        stName[i] = toupper(name[i]) - 0x30;
+    }
+    _message[0] = 0x82;
+    _message[1] = 0x05;
+    _message[2] = (stName[0] & 0x3F) | ((stName[1] << 6) & 0xC0);
+    _message[3] = _message[2] ^ 0xFF;
+    _message[4] = ((stName[1] >> 2) & 0xF) | ((stName[2] << 4) & 0xF0);
+    _message[5] = _message[4] ^ 0xFF;
+    _message[6] = ((stName[2] >> 4) & 0x3) | ((stName[3] << 2) & 0xFC);
+    _message[7] = _message[6] ^ 0xFF;
+}
+
+SeaTalkMessageTargetWaypointName::SeaTalkMessageTargetWaypointName(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {
+    _name[0] = (message[2] & 0x3F) + 0x30;
+    _name[1] = (message[4] & 0xF) * 4 + (message[2] & 0xC0) / 64 + 0x30;
+    _name[2] = (message[6] & 0x3) * 16 + (message[4] & 0xF0) / 16 + 0x30;
+    _name[3] = (message[6] & 0xFC) / 4 + 0x30;
+    _name[4] = 0;
 }
 
 SeaTalkMessageNavigationToWaypoint::SeaTalkMessageNavigationToWaypoint(float xte, Heading bearingToDestination, float distanceToDestination, Laterality directionToSteer, int trackControlMode) : BaseSeaTalkMessage(this->messageLength()) {

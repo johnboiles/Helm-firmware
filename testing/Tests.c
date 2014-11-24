@@ -246,6 +246,18 @@ TEST_CASE( "SeaTalkMessageNavigationToWaypoint is generated properly" ) {
     assertEqualSeaTalkMessages(&nav, expected, sizeof(expected));
 }
 
+TEST_CASE( "SeaTalkMessageNavigationToWaypoint is parsed properly" ) {
+    // Created from the examples in the Knauf doc
+    uint8_t message[9] = {0x85, 0x56, 0x10, 0x42, 0x16, 0x20, 0x17, 0x00, 0xE8};
+    SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(message);
+    REQUIRE( nav.xte() == 2.61f );
+    REQUIRE( nav.bearingToDestination().degrees == 230 );
+    REQUIRE( nav.bearingToDestination().isMagnetic == true );
+    REQUIRE( nav.distanceToDestination() == 5.13f );
+    REQUIRE( nav.directionToSteer() == LateralityLeft );
+    REQUIRE( nav.trackControlMode() == 0x7 );
+}
+
 TEST_CASE( "SeaTalkMessageMagneticVariation is generated properly" ) {
     uint8_t expected[3] = {0x99, 0x00, 0xF3};
     SeaTalkMessageMagneticVariation mv = SeaTalkMessageMagneticVariation(-13);

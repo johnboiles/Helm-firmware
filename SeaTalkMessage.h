@@ -245,20 +245,27 @@ public:
 class SeaTalkMessageNavigationToWaypoint : public BaseSeaTalkMessage
 {
 public:
+    SeaTalkMessageNavigationToWaypoint(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {}
     SeaTalkMessageNavigationToWaypoint(float xte, Heading bearingToDestination, float distanceToDestination, Laterality directionToSteer, int trackControlMode);
     int messageLength() { return 9; }
-    float xte() { return _xte; }
-    Heading bearingToDestination() { return _bearingToDestination; }
-    float distanceToDestination() { return _distanceToDestination; }
-    Laterality directionToSteer() { return _directionToSteer; }
-    int trackControlMode() { return _trackControlMode; }
-private:
-    float _xte;
-    Heading _bearingToDestination;
-    float _distanceToDestination;
-    Laterality _directionToSteer;
-    // TODO: Create an enum for this?
-    int _trackControlMode;
+
+    float xte() { return (((_message[1] >> 4) & 0xF) + (_message[2] << 4)) / 100.0; }
+    Heading bearingToDestination() {
+        Heading heading;
+        heading.degrees = ((_message[3] & 0x3) * 90) + (((_message[3] >> 4) & 0xF) + ((_message[4] << 4) & 0xF0)) / 2.0;
+        heading.isMagnetic = !(_message[3] & 0x8);
+        return heading;
+    }
+    float distanceToDestination() {
+        float multiplier = _message[6] & 0x10 ? 100.0 : 10.0;
+        return (((_message[4] >> 4) & 0xF) + ((_message[5] << 4) & 0xFF0)) / multiplier;
+    }
+    Laterality directionToSteer() {
+        return _message[6] & 0x40 ? LateralityRight : LateralityLeft;
+    }
+    int trackControlMode() {
+        return _message[6] & 0xF;
+    }
 };
 
 // 99  00  XX        Compass variation sent by ST40 compass instrument

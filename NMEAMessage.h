@@ -48,7 +48,7 @@ public:
     double destinationLatitude() { return _destinationLatitude; }
     double destinationLongitude() { return _destinationLongitude; }
     float rangeToDestiation() { return _rangeToDestiation; }
-    float bearingToDestination() { return _bearingToDestination; }
+    Heading bearingToDestination() { return _bearingToDestination; }
     float destinationClosingVelocity() { return _destinationClosingVelocity; }
     bool isArrived() { return _isArrived; }
 private:
@@ -60,7 +60,7 @@ private:
     double _destinationLatitude;
     double _destinationLongitude;
     float _rangeToDestiation;
-    float _bearingToDestination;
+    Heading _bearingToDestination;
     float _destinationClosingVelocity;
     bool _isArrived;
 };

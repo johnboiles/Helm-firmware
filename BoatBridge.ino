@@ -69,14 +69,17 @@ void loop() {
                 SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
                 SeaTalkMessageSpeedOverGround seaTalkMessageSpeedOverGround(rmc.speedOverGround());
                 SEND_SEATALK_MESSAGE(seaTalkMessageSpeedOverGround);
-                // Only send time once per minute
+                // Only send date once per minute
                 if (rmc.time().second == 0) {
-                    SeaTalkMessageTime seaTalkMessageTime(rmc.time());
-                    SEND_SEATALK_MESSAGE(seaTalkMessageTime);
                     SeaTalkMessageDate seaTalkMessageDate(rmc.date());
                     SEND_SEATALK_MESSAGE(seaTalkMessageDate);
                     SeaTalkMessageMagneticVariation magneticVariation(-13);
                     SEND_SEATALK_MESSAGE(magneticVariation);
+                }
+                // Send time every 10 seconds
+                if (((int)rmc.time().second) % 10 == 0) {
+                    SeaTalkMessageTime seaTalkMessageTime(rmc.time());
+                    SEND_SEATALK_MESSAGE(seaTalkMessageTime);
                 }
             }
         }
@@ -87,7 +90,22 @@ void loop() {
         bool complete = INPUT_PARSER.parse(incomingByte);
         if (complete) {
             const char *message = INPUT_PARSER.message();
-            OUTPUT_SERIAL.write(message);
+            // Route APB and RMB info to the SeaTalk network
+            // TODO: Detect route info coming in from the SeaTalk network and handle more gracefully
+            // QUESTION: If I pass in APB and RMB messages into the Raymarine NMEA port, do those get magically translated too?
+            if (message[3] == 'A' && message[4] == 'P' && message[5] == 'B') {
+                NMEAMessageAPB apb = NMEAMessageAPB(message);
+                SeaTalkMessageTargetWaypointName waypt = SeaTalkMessageTargetWaypointName(apb.destinationWaypointID());
+                SEND_SEATALK_MESSAGE(waypt);
+                if (apb.isArrived() || apb.isPerpendicualrPassed()) {
+                    SeaTalkMessageArrivalInfo arr = SeaTalkMessageArrivalInfo(apb.isPerpendicualrPassed(), apb.isArrived(), apb.destinationWaypointID());
+                    SEND_SEATALK_MESSAGE(arr);
+                }
+            } else if (message[3] == 'R' && message[4] == 'M' && message[5] == 'B') {
+                NMEAMessageRMB rmb = NMEAMessageRMB(message);
+                SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(rmb.xte(), rmb.bearingToDestination(), rmb.rangeToDestiation(), rmb.directionToSteer(), 0x7);
+                SEND_SEATALK_MESSAGE(nav);
+            }
         }
     }
     while (SEATALK_SERIAL.available()) {

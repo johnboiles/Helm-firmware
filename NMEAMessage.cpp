@@ -60,7 +60,7 @@ NMEAMessageRMB::NMEAMessageRMB(const char *message) : BaseNMEAMessage() {
     _destinationLatitude = degreesFromCoordinateString(fragments[6], fragments[7][0]);
     _destinationLongitude = degreesFromCoordinateString(fragments[8], fragments[9][0]);
     _rangeToDestiation = atof(fragments[10]);
-    _bearingToDestination = atof(fragments[11]);
+    _bearingToDestination = headingFromFragments(fragments[11], "T");
     _destinationClosingVelocity = atof(fragments[12]);
     _isArrived = fragments[13][0] == 'A' ? true : false;
 

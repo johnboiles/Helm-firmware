@@ -69,7 +69,7 @@ TEST_CASE( "NMEAMessageRMB is parsed properly" ) {
     REQUIRE( rmb.destinationLatitude() == 37.86573333333333333);
     REQUIRE( rmb.destinationLongitude() == -122.32868333333333);
     REQUIRE( rmb.rangeToDestiation() == 0.596f );
-    REQUIRE( rmb.bearingToDestination() == 266.197f);
+    REQUIRE( rmb.bearingToDestination().degrees == 266.197f);
     REQUIRE( rmb.destinationClosingVelocity() == 0.055f);
 }
 
@@ -274,6 +274,18 @@ TEST_CASE( "SeaTalkMessageCompassHeadingAndRudderPosition is generated properly"
     uint8_t expected[4] = {0x9C, 0xA1, 0x1C, 0x00};
     SeaTalkMessageCompassHeadingAndRudderPosition heading = SeaTalkMessageCompassHeadingAndRudderPosition(237, false, 0);
     assertEqualSeaTalkMessages(&heading, expected, sizeof(expected));
+}
+
+TEST_CASE( "SeaTalkMessageArrivalInfo is generated properly" ) {
+    uint8_t expected[7] = {0xA2, 0x44, 0x00, 0, '0', '0', '1'};
+    SeaTalkMessageArrivalInfo arr = SeaTalkMessageArrivalInfo(false, true, "001");
+    assertEqualSeaTalkMessages(&arr, expected, sizeof(expected));
+}
+
+TEST_CASE( "SeaTalkMessageArrivalInfo only uses the last 4 of name" ) {
+    uint8_t expected[7] = {0xA2, 0x44, 0x00, 'U', 'P', 'E', 'R'};
+    SeaTalkMessageArrivalInfo arr = SeaTalkMessageArrivalInfo(false, true, "superduper");
+    assertEqualSeaTalkMessages(&arr, expected, sizeof(expected));
 }
 
 TEST_CASE( "SeaTalkMessageDeviceQuery is generated properly" ) {

@@ -166,7 +166,9 @@ SeaTalkMessageTargetWaypointName::SeaTalkMessageTargetWaypointName(const char *n
     uint8_t stName[4];
     for (int i = 0; i < 4; i++) {
         stName[i] = toupper(name[i]) - 0x30;
+        _name[i] = toupper(name[i]);
     }
+    _name[4] = 0;
     _message[0] = 0x82;
     _message[1] = 0x05;
     _message[2] = (stName[0] & 0x3F) | ((stName[1] << 6) & 0xC0);
@@ -175,14 +177,6 @@ SeaTalkMessageTargetWaypointName::SeaTalkMessageTargetWaypointName(const char *n
     _message[5] = _message[4] ^ 0xFF;
     _message[6] = ((stName[2] >> 4) & 0x3) | ((stName[3] << 2) & 0xFC);
     _message[7] = _message[6] ^ 0xFF;
-}
-
-SeaTalkMessageTargetWaypointName::SeaTalkMessageTargetWaypointName(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {
-    _name[0] = (message[2] & 0x3F) + 0x30;
-    _name[1] = (message[4] & 0xF) * 4 + (message[2] & 0xC0) / 64 + 0x30;
-    _name[2] = (message[6] & 0x3) * 16 + (message[4] & 0xF0) / 16 + 0x30;
-    _name[3] = (message[6] & 0xFC) / 4 + 0x30;
-    _name[4] = 0;
 }
 
 SeaTalkMessageNavigationToWaypoint::SeaTalkMessageNavigationToWaypoint(float xte, Heading bearingToDestination, float distanceToDestination, Laterality directionToSteer, int trackControlMode) : BaseSeaTalkMessage(this->messageLength()) {
@@ -226,6 +220,15 @@ SeaTalkMessageCompassHeadingAndRudderPosition::SeaTalkMessageCompassHeadingAndRu
     _message[1] |= (compassHeading % 2) << 7;
     _message[2] = 0x3F & ((compassHeading - quadrant * 90) / 2);
     _message[3] = rudderPosition;
+}
+
+SeaTalkMessageArrivalInfo::SeaTalkMessageArrivalInfo(bool isPerpendicularPassed, bool isArrivalCircleEntered, const char *waypointName) : BaseSeaTalkMessage(this->messageLength()) {
+    _message[0] = 0xA2;
+    _message[1] = 0x4 | (isPerpendicularPassed ? 0x20 : 0) | (isArrivalCircleEntered ? 0x40 : 0);
+    int nameLength = (int)strlen(waypointName);
+    for (int i = 0; i < 4 && i < nameLength; i++) {
+        _message[this->messageLength() - i - 1] = toupper(waypointName[nameLength - i - 1]);
+    }
 }
 
 SeaTalkMessageDeviceQuery::SeaTalkMessageDeviceQuery() : BaseSeaTalkMessage(this->messageLength()) {

@@ -21,6 +21,7 @@ typedef enum {
     SeaTalkMessageTypeNavigationToWaypoint = 0x85,
     SeaTalkMessageTypeMagneticVariation = 0x99,
     SeaTalkMessageTypeCompassHeadingAndRudderPosition = 0x9C,
+    SeaTalkMessageTypeArrivalInfo = 0xA2,
     SeaTalkMessageTypeDeviceQuery = 0xA4
 } SeaTalkMessageType;
 
@@ -156,9 +157,18 @@ class SeaTalkMessageTargetWaypointName : public BaseSeaTalkMessage
 {
 public:
     SeaTalkMessageTargetWaypointName(const char *name);
-    SeaTalkMessageTargetWaypointName(const uint8_t *message);
+    SeaTalkMessageTargetWaypointName(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) { _name[0] = 0; }
     int messageLength() { return 8; }
-    char *name() { return _name; }
+    char *name() {
+        if (!_name[0]) {
+            _name[0] = (_message[2] & 0x3F) + 0x30;
+            _name[1] = (_message[4] & 0xF) * 4 + (_message[2] & 0xC0) / 64 + 0x30;
+            _name[2] = (_message[6] & 0x3) * 16 + (_message[4] & 0xF0) / 16 + 0x30;
+            _name[3] = (_message[6] & 0xFC) / 4 + 0x30;
+            _name[4] = 0;
+        }
+        return _name;
+    }
 private:
     char _name[5];
 };
@@ -309,6 +319,24 @@ public:
     bool isTurningRight() { return (_message[1] & 0x40) == 0x80; }
     int rudderPosition() { return (int)_message[3]; }
 };
+
+// A2  X4  00  WW XX YY ZZ Arrival Info
+// X&0x2=Arrival perpendicular passed, X&0x4=Arrival circle entered
+// WW,XX,YY,ZZ = Ascii char's of waypoint id.   (0..9,A..Z)
+// Takes the last 4 chars of name, assumes upper case only
+class SeaTalkMessageArrivalInfo : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageArrivalInfo(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {}
+    SeaTalkMessageArrivalInfo(bool isPerpendicularPassed, bool isArrivalCircleEntered, const char *waypointName);
+    int messageLength() { return 7; }
+    bool isPerpendicularPassed() { return _message[1] & 0x20; }
+    bool isArrivalCircleEntered() { return _message[1] & 0x40; }
+    char *name() {
+        return (char *)&_message[3];
+    }
+};
+
 
 class SeaTalkMessageDeviceQuery : public BaseSeaTalkMessage
 {

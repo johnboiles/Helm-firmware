@@ -3,6 +3,7 @@
 #include "NMEAMessage.h"
 #include "SeaTalkParser.h"
 #include "SeaTalkMessage.h"
+#include <AltSoftSerial.h>
 
 
 #define DEBUG_LED LED_BUILTIN
@@ -11,6 +12,7 @@
 #define NMEA_HS_SERIAL Serial1
 #define SEATALK_SERIAL Serial3
 #define GPS_SERIAL Serial2
+AltSoftSerial NMEA_SERIAL;
 
 NMEAParser GPS_PARSER;
 NMEAParser AIS_PARSER;
@@ -31,6 +33,7 @@ void setup() {
     NMEA_HS_SERIAL.begin(38400);
     SEATALK_SERIAL.begin(4800, SERIAL_9N1_RXINV_TXINV);
     GPS_SERIAL.begin(9600);
+    NMEA_SERIAL.begin(4800);
 
     // Enable interrupts
     sei();
@@ -39,6 +42,7 @@ void setup() {
 #define SEND_SEATALK_MESSAGE(messageInstance) SEATALK_SERIAL.write9bit(messageInstance.message()[0] + 256); SEATALK_SERIAL.write(&(messageInstance.message()[1]), messageInstance.messageLength() - 1);
 #define PRINT_SEATALK_MESSAGE(messageInstance) printSeaTalkMessage(messageInstance->message(), messageInstance->messageLength());
 
+#define MESSAGE_IS_NMEA_TYPE(message, type) (message[3] == type[0] && message[4] == type[1] && message[5] == type[2])
 
 void loop() {
     // Route AIS to the computer
@@ -59,29 +63,33 @@ void loop() {
         if (complete) {
             const char *message = GPS_PARSER.message();
             OUTPUT_SERIAL.write(message);
-            NMEA_HS_SERIAL.write(message);
-            // Push location messages out over SeaTalk
-            if (message[3] == 'R' && message[4] == 'M' && message[5] == 'C') {
-                NMEAMessageRMC rmc = NMEAMessageRMC(message);
-                SeaTalkMessageLongitude seaTalkMessageLongitude(rmc.longitude());
-                SEND_SEATALK_MESSAGE(seaTalkMessageLongitude);
-                SeaTalkMessageLatitude seaTalkMessageLatitude(rmc.latitude());
-                SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
-                SeaTalkMessageSpeedOverGround seaTalkMessageSpeedOverGround(rmc.speedOverGround());
-                SEND_SEATALK_MESSAGE(seaTalkMessageSpeedOverGround);
-                // Only send date once per minute
-                if (rmc.time().second == 0) {
-                    SeaTalkMessageDate seaTalkMessageDate(rmc.date());
-                    SEND_SEATALK_MESSAGE(seaTalkMessageDate);
-                    SeaTalkMessageMagneticVariation magneticVariation(-13);
-                    SEND_SEATALK_MESSAGE(magneticVariation);
-                }
-                // Send time every 10 seconds
-                if (((int)rmc.time().second) % 10 == 0) {
-                    SeaTalkMessageTime seaTalkMessageTime(rmc.time());
-                    SEND_SEATALK_MESSAGE(seaTalkMessageTime);
-                }
+            // Don't transmit unnecessary messages since NMEA_SERIAL's baud rate is lower
+            if (!MESSAGE_IS_NMEA_TYPE(message, "GSV")) {
+                NMEA_SERIAL.print(message);
             }
+            NMEA_HS_SERIAL.write(message);
+//            // Push location messages out over SeaTalk
+//            if (MESSAGE_IS_NMEA_TYPE(message, "RMC")) {
+//                NMEAMessageRMC rmc = NMEAMessageRMC(message);
+//                SeaTalkMessageLongitude seaTalkMessageLongitude(rmc.longitude());
+//                SEND_SEATALK_MESSAGE(seaTalkMessageLongitude);
+//                SeaTalkMessageLatitude seaTalkMessageLatitude(rmc.latitude());
+//                SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
+//                SeaTalkMessageSpeedOverGround seaTalkMessageSpeedOverGround(rmc.speedOverGround());
+//                SEND_SEATALK_MESSAGE(seaTalkMessageSpeedOverGround);
+//                // Only send date once per minute
+//                if (rmc.time().second == 0) {
+//                    SeaTalkMessageDate seaTalkMessageDate(rmc.date());
+//                    SEND_SEATALK_MESSAGE(seaTalkMessageDate);
+//                    SeaTalkMessageMagneticVariation magneticVariation(-13);
+//                    SEND_SEATALK_MESSAGE(magneticVariation);
+//                }
+//                // Send time every 10 seconds
+//                if (((int)rmc.time().second) % 10 == 0) {
+//                    SeaTalkMessageTime seaTalkMessageTime(rmc.time());
+//                    SEND_SEATALK_MESSAGE(seaTalkMessageTime);
+//                }
+//            }
         }
     }
     if (OUTPUT_SERIAL.available()) {
@@ -92,12 +100,12 @@ void loop() {
         if (complete) {
             const char *message = INPUT_PARSER.message();
             // Route APB and RMB info to the SeaTalk network
-            // TODO: Detect route info coming in from the SeaTalk network and handle more gracefully
-            if (message[3] == 'R' && message[4] == 'M' && message[5] == 'B') {
+            // TODO: Detect conflicting route info coming in from the SeaTalk network and handle more gracefully
+            if (MESSAGE_IS_NMEA_TYPE(message, "RMB")) {
                 NMEAMessageRMB rmb = NMEAMessageRMB(message);
                 SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(rmb.xte(), rmb.bearingToDestination(), rmb.rangeToDestiation(), rmb.directionToSteer(), 0x7);
                 SEND_SEATALK_MESSAGE(nav);
-            } else if (message[3] == 'A' && message[4] == 'P' && message[5] == 'B') {
+            } else if (MESSAGE_IS_NMEA_TYPE(message, "APB")) {
                 NMEAMessageAPB apb = NMEAMessageAPB(message);
                 SeaTalkMessageTargetWaypointName waypt = SeaTalkMessageTargetWaypointName(apb.destinationWaypointID());
                 SEND_SEATALK_MESSAGE(waypt);

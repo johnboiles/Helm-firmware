@@ -119,20 +119,15 @@ SeaTalkMessageSpeedOverGround::SeaTalkMessageSpeedOverGround(double speed) : Bas
 }
 
 SeaTalkMessageMagneticCourse::SeaTalkMessageMagneticCourse(double course) : BaseSeaTalkMessage(this->messageLength()) {
-    // 53  U0  VW      Magnetic Course in degrees: 
-    // The two lower  bits of  U * 90 + 
-    //    the six lower  bits of VW *  2 + 
-    //    the two higher bits of  U /  2 = 
-    //    (U & 0x3) * 90 + (VW & 0x3F) * 2 + (U & 0xC) / 8
-    // The Magnetic Course may be offset by the Compass Variation (see datagram 99) to get the Course Over Ground (COG).
-    // TODO: This message is crazy, I probably did it wrong
+    // Round to the nearest 0.5
+    course = roundf(course * 2.0) / 2.0;
     _message[0] = 0x53;
     int quadrant = course / 90;
-    _message[1] = (quadrant << 4);
-    int degreesInQuadrant = (course - (quadrant * 90)) / 2;
-    _message[2] = degreesInQuadrant & 0x3F;
-    int fraction = (course - quadrant * 90 - degreesInQuadrant * 2) * 8;
-    _message[1] |= (fraction << 6) & 0xC0;
+    _message[1] = ((quadrant & 0x3) << 4);
+    int degreesInQuadrant = floor(course - (quadrant * 90)) / 2;
+    _message[2] = (degreesInQuadrant) & 0x3F;
+    int fraction = 2 * (course - quadrant * 90.0 - 2 * degreesInQuadrant);
+    _message[1] |= ((fraction & 0x3) << 6);
 }
 
 SeaTalkMessageTime::SeaTalkMessageTime(Time time) : BaseSeaTalkMessage(this->messageLength()) {

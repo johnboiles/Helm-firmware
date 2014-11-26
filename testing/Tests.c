@@ -20,7 +20,7 @@ TEST_CASE( "NMEAMessageRMC is parsed properly" ) {
 
     // Theoretical message including track made good and magnetic variation
     rmc = NMEAMessageRMC("$GPRMC,045431.00,A,3751.98405,N,12218.96980,W,0.078,45.2,041114,42.2,W,D*68\r\n");
-    REQUIRE( rmc.trackMadeGood() == 45.2 );
+    REQUIRE( rmc.trackMadeGood().degrees == 45.2f );
     REQUIRE( rmc.magneticVariation() == -42.2 );
 }
 
@@ -165,10 +165,26 @@ TEST_CASE( "SeaTalkMessageSpeedOverGround is generated properly" ) {
 }
 
 TEST_CASE( "SeaTalkMessageMagneticCourse is generated properly" ) {
-    // Not based on actual data
-    SeaTalkMessageMagneticCourse mc = SeaTalkMessageMagneticCourse(0);
-    uint8_t expected[3] = {0x53, 0x00, 0x00};
-    assertEqualSeaTalkMessages(&mc, expected, 3);
+    SeaTalkMessageMagneticCourse mc = SeaTalkMessageMagneticCourse(149.9);
+    uint8_t expected[3] = {0x53, 0x10, 0x1e};
+    assertEqualSeaTalkMessages(&mc, expected, sizeof(expected));
+}
+
+TEST_CASE( "SeaTalkMessageMagneticCourse rounding" ) {
+    SeaTalkMessageMagneticCourse mc = SeaTalkMessageMagneticCourse(159.9);
+    REQUIRE( mc.course() == 160.0f );
+
+    mc = SeaTalkMessageMagneticCourse(149.9);
+    REQUIRE( mc.course() == 150.0f );
+
+    mc = SeaTalkMessageMagneticCourse(149.6);
+    REQUIRE( mc.course() == 149.5f );
+
+    mc = SeaTalkMessageMagneticCourse(249.4);
+    REQUIRE( mc.course() == 249.5f );
+
+    mc = SeaTalkMessageMagneticCourse(349.2);
+    REQUIRE( mc.course() == 349.0f );
 }
 
 TEST_CASE( "SeaTalkMessageTime is generated properly" ) {

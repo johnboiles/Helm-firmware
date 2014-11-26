@@ -77,6 +77,9 @@ void loop() {
 //                SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
 //                SeaTalkMessageSpeedOverGround seaTalkMessageSpeedOverGround(rmc.speedOverGround());
 //                SEND_SEATALK_MESSAGE(seaTalkMessageSpeedOverGround);
+//                // This isn't quite the right translation. The SeaTalk message is magnetic course, and trackMadeGood is true course, but I don't think this should hurt anything
+//                SeaTalkMessageMagneticCourse seaTalkMessageMagneticCourse(rmc.trackMadeGood().degrees);
+//                SEND_SEATALK_MESSAGE(SeaTalkMessageMagneticCourse);
 //                // Only send date once per minute
 //                if (rmc.time().second == 0) {
 //                    SeaTalkMessageDate seaTalkMessageDate(rmc.date());

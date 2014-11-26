@@ -80,7 +80,7 @@ NMEAMessageRMC::NMEAMessageRMC(const char *message) : BaseNMEAMessage() {
     _latitude = degreesFromCoordinateString(fragments[3], fragments[4][0]);
     _longitude = degreesFromCoordinateString(fragments[5], fragments[6][0]);
     _speedOverGround = atof(fragments[7]);
-    _trackMadeGood = atof(fragments[8]);
+    _trackMadeGood = headingFromFragments(fragments[8], "T");
     sscanf(fragments[9], "%2d%2d%2d", &(_date.day), &(_date.month), &(_date.year));
     _magneticVariation = atof(fragments[10]);
     if (fragments[11][0] == 'W') {

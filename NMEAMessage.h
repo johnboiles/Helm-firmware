@@ -74,7 +74,7 @@ public:
     double latitude() { return _latitude; }
     double longitude() { return _longitude; }
     double speedOverGround() { return _speedOverGround; }
-    double trackMadeGood() { return _trackMadeGood; }
+    Heading trackMadeGood() { return _trackMadeGood; }
     Date date() { return _date; }
     //! West is negative
     double magneticVariation() { return _magneticVariation; }
@@ -84,7 +84,7 @@ private:
     double _latitude;
     double _longitude;
     double _speedOverGround;
-    double _trackMadeGood;
+    Heading _trackMadeGood;
     Date _date;
     double _magneticVariation;
 };

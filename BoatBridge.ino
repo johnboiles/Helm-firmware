@@ -8,10 +8,12 @@
 
 #define DEBUG_LED LED_BUILTIN
 
+// TX buffers for all the UARTs should be increased to make sure FIFO size is never a bottleneck. After all, the Teensy has 64k of RAM. Should be ok to make the TX buffers 200 bytes.
 #define OUTPUT_SERIAL Serial
 #define NMEA_HS_SERIAL Serial1
 #define SEATALK_SERIAL Serial3
 #define GPS_SERIAL Serial2
+// NOTE: TX Buffer should be at least 160b (assuming GSV messages are dropped) since NMEA0183 is 4800 baud
 AltSoftSerial NMEA_SERIAL;
 
 NMEAParser GPS_PARSER;

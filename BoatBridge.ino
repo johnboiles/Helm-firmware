@@ -86,8 +86,6 @@ void loop() {
 //                if (rmc.time().second == 0) {
 //                    SeaTalkMessageDate seaTalkMessageDate(rmc.date());
 //                    SEND_SEATALK_MESSAGE(seaTalkMessageDate);
-//                    SeaTalkMessageMagneticVariation magneticVariation(-13);
-//                    SEND_SEATALK_MESSAGE(magneticVariation);
 //                }
 //                // Send time every 10 seconds
 //                if (((int)rmc.time().second) % 10 == 0) {
@@ -117,6 +115,13 @@ void loop() {
                 if (apb.isArrived() || apb.isPerpendicualrPassed()) {
                     SeaTalkMessageArrivalInfo arr = SeaTalkMessageArrivalInfo(apb.isPerpendicualrPassed(), apb.isArrived(), apb.destinationWaypointID());
                     SEND_SEATALK_MESSAGE(arr);
+                }
+            } else if (MESSAGE_IS_NMEA_TYPE(message, "RMC")) {
+                NMEAMessageRMC rmc = NMEAMessageRMC(message);
+                // TODO: Probably don't need to send this every time.
+                if (rmc.magneticVariation()) {
+                    SeaTalkMessageMagneticVariation magneticVariation(roundf(rmc.magneticVariation()));
+                    SEND_SEATALK_MESSAGE(magneticVariation);
                 }
             }
         }

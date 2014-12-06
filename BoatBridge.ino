@@ -4,9 +4,14 @@
 #include "SeaTalkParser.h"
 #include "SeaTalkMessage.h"
 #include <AltSoftSerial.h>
+#include "BoatState.h"
 
 
 #define DEBUG_LED LED_BUILTIN
+#define ROUTE_GPS_TO_NMEA_OUT 0
+#define ROUTE_GPS_TO_SEATALK 1
+#define ROUTE_RAW_SEATALK_TO_OUTPUT 1
+
 
 // TX buffers for all the UARTs should be increased to make sure FIFO size is never a bottleneck. After all, the Teensy has 64k of RAM. Should be ok to make the TX buffers 200 bytes.
 #define OUTPUT_SERIAL Serial
@@ -21,9 +26,7 @@ NMEAParser AIS_PARSER;
 NMEAParser INPUT_PARSER;
 SeaTalkParser SEATALK_PARSER;
 
-// TODO: I should make some sort of boat state object
-float WindSpeed;
-float WindAngle;
+BoatState BOAT_STATE;
 
 void setup() {
     cli();
@@ -65,39 +68,44 @@ void loop() {
         if (complete) {
             const char *message = GPS_PARSER.message();
             OUTPUT_SERIAL.write(message);
+
+#if ROUTE_GPS_TO_NMEA_OUT
             // Don't transmit unnecessary messages since NMEA_SERIAL's baud rate is lower
             if (!MESSAGE_IS_NMEA_TYPE(message, "GSV")) {
                 NMEA_SERIAL.print(message);
             }
+#endif
             NMEA_HS_SERIAL.write(message);
-//            // Push location messages out over SeaTalk
-//            if (MESSAGE_IS_NMEA_TYPE(message, "RMC")) {
-//                NMEAMessageRMC rmc = NMEAMessageRMC(message);
-//                SeaTalkMessageLongitude seaTalkMessageLongitude(rmc.longitude());
-//                SEND_SEATALK_MESSAGE(seaTalkMessageLongitude);
-//                SeaTalkMessageLatitude seaTalkMessageLatitude(rmc.latitude());
-//                SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
-//                SeaTalkMessageSpeedOverGround seaTalkMessageSpeedOverGround(rmc.speedOverGround());
-//                SEND_SEATALK_MESSAGE(seaTalkMessageSpeedOverGround);
-//                // This isn't quite the right translation. The SeaTalk message is magnetic course, and trackMadeGood is true course, but I don't think this should hurt anything
-//                SeaTalkMessageMagneticCourse seaTalkMessageMagneticCourse(rmc.trackMadeGood().degrees);
-//                SEND_SEATALK_MESSAGE(SeaTalkMessageMagneticCourse);
-//                // Only send date once per minute
-//                if (rmc.time().second == 0) {
-//                    SeaTalkMessageDate seaTalkMessageDate(rmc.date());
-//                    SEND_SEATALK_MESSAGE(seaTalkMessageDate);
-//                }
-//                // Send time every 10 seconds
-//                if (((int)rmc.time().second) % 10 == 0) {
-//                    SeaTalkMessageTime seaTalkMessageTime(rmc.time());
-//                    SEND_SEATALK_MESSAGE(seaTalkMessageTime);
-//                }
-//            }
+#if ROUTE_GPS_TO_SEATALK
+            // Push location messages out over SeaTalk
+            if (MESSAGE_IS_NMEA_TYPE(message, "RMC")) {
+                NMEAMessageRMC rmc = NMEAMessageRMC(message);
+                SeaTalkMessageLongitude seaTalkMessageLongitude(rmc.longitude());
+                SEND_SEATALK_MESSAGE(seaTalkMessageLongitude);
+                SeaTalkMessageLatitude seaTalkMessageLatitude(rmc.latitude());
+                SEND_SEATALK_MESSAGE(seaTalkMessageLatitude);
+                SeaTalkMessageSpeedOverGround seaTalkMessageSpeedOverGround(rmc.speedOverGround());
+                SEND_SEATALK_MESSAGE(seaTalkMessageSpeedOverGround);
+                // This isn't quite the right translation. The SeaTalk message is magnetic course, and trackMadeGood is true course, but I don't think this should hurt anything. Try to convert if possible.
+                SeaTalkMessageMagneticCourse seaTalkMessageMagneticCourse(BOAT_STATE.headingToMagnetic(rmc.trackMadeGood()).degrees);
+                SEND_SEATALK_MESSAGE(seaTalkMessageMagneticCourse);
+                // Only send date once per minute
+                if (rmc.time().second == 0) {
+                    SeaTalkMessageDate seaTalkMessageDate(rmc.date());
+                    SEND_SEATALK_MESSAGE(seaTalkMessageDate);
+                }
+                // Send time every 10 seconds
+                if (((int)rmc.time().second) % 10 == 0) {
+                    SeaTalkMessageTime seaTalkMessageTime(rmc.time());
+                    SEND_SEATALK_MESSAGE(seaTalkMessageTime);
+                }
+            }
+#endif
         }
     }
     if (OUTPUT_SERIAL.available()) {
         digitalWrite(DEBUG_LED, HIGH);
-        // Consume incoming bytes. Teensy seems to crash otherwise
+        // Always consume incoming bytes. Teensy seems to crash otherwise
         uint8_t incomingByte = OUTPUT_SERIAL.read();
         bool complete = INPUT_PARSER.parse(incomingByte);
         if (complete) {
@@ -106,20 +114,25 @@ void loop() {
             // TODO: Detect conflicting route info coming in from the SeaTalk network and handle more gracefully
             if (MESSAGE_IS_NMEA_TYPE(message, "RMB")) {
                 NMEAMessageRMB rmb = NMEAMessageRMB(message);
-                SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(rmb.xte(), rmb.bearingToDestination(), rmb.rangeToDestiation(), rmb.directionToSteer(), 0x7);
+                Heading bearingToDestination = rmb.bearingToDestination();
+                // TODO: Not sure if the ST4000 picks up the magnetic variation from message 99. If not, it might be beneficial to do the conversion to magnetic heading here.
+                // It's also possible to do the conversion in OpenCPN's connection settings
+//                bearingToDestination = BOAT_STATE.headingToMagnetic(bearingToDestination)
+                SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(rmb.xte(), bearingToDestination, rmb.rangeToDestiation(), rmb.directionToSteer(), 0x7);
                 SEND_SEATALK_MESSAGE(nav);
             } else if (MESSAGE_IS_NMEA_TYPE(message, "APB")) {
                 NMEAMessageAPB apb = NMEAMessageAPB(message);
                 SeaTalkMessageTargetWaypointName waypt = SeaTalkMessageTargetWaypointName(apb.destinationWaypointID());
                 SEND_SEATALK_MESSAGE(waypt);
-                if (apb.isArrived() || apb.isPerpendicualrPassed()) {
-                    SeaTalkMessageArrivalInfo arr = SeaTalkMessageArrivalInfo(apb.isPerpendicualrPassed(), apb.isArrived(), apb.destinationWaypointID());
+                if (apb.isArrived() || apb.isPerpendicularPassed()) {
+                    SeaTalkMessageArrivalInfo arr = SeaTalkMessageArrivalInfo(apb.isPerpendicularPassed(), apb.isArrived(), apb.destinationWaypointID());
                     SEND_SEATALK_MESSAGE(arr);
                 }
             } else if (MESSAGE_IS_NMEA_TYPE(message, "RMC")) {
                 NMEAMessageRMC rmc = NMEAMessageRMC(message);
-                // TODO: Probably don't need to send this every time.
-                if (rmc.magneticVariation()) {
+                if (rmc.magneticVariation() && !((int)rmc.time().second % 5)) {
+                    BOAT_STATE.magneticVariation = rmc.magneticVariation();
+                    // TODO: Probably don't need to send this every time.
                     SeaTalkMessageMagneticVariation magneticVariation(roundf(rmc.magneticVariation()));
                     SEND_SEATALK_MESSAGE(magneticVariation);
                 }
@@ -134,16 +147,18 @@ void loop() {
             // Create a message
             // TODO: Need to dig deeper into the UART so that I can do collision managment
             BaseSeaTalkMessage *message = newSeaTalkMessage(SEATALK_PARSER.message(), SEATALK_PARSER.messageLength());
-            // PRINT_SEATALK_MESSAGE(message);
+#if ROUTE_RAW_SEATALK_TO_OUTPUT
+            PRINT_SEATALK_MESSAGE(message);
+#endif
             SeaTalkMessageType messageType = message->messageType();
             if (messageType == SeaTalkMessageTypeWindAngle) {
                 SeaTalkMessageWindAngle *windAngleMessage = (SeaTalkMessageWindAngle *)message;
-                WindAngle = windAngleMessage->windAngle();
-                NMEAMessageWind windMessage = NMEAMessageWind(WindAngle, WindSpeed);
+                BOAT_STATE.windAngle = windAngleMessage->windAngle();
+                NMEAMessageWind windMessage = NMEAMessageWind(BOAT_STATE.windAngle, BOAT_STATE.windSpeed);
                 OUTPUT_SERIAL.print(windMessage.message());
             } else if (messageType == SeaTalkMessageTypeWindSpeed) {
                 SeaTalkMessageWindSpeed *windSpeedMessage = (SeaTalkMessageWindSpeed *)message;
-                WindSpeed = windSpeedMessage->windSpeed();
+                BOAT_STATE.windSpeed = windSpeedMessage->windSpeed();
             } else if (messageType == SeaTalkMessageTypeDepth) {
                 SeaTalkMessageDepth *depthMessage = (SeaTalkMessageDepth *)message;
                 NMEAMessageDBT dbt = NMEAMessageDBT(depthMessage->depth());

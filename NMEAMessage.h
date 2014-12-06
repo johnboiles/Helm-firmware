@@ -133,7 +133,7 @@ public:
     //! Arrival Circle Entered
     bool isArrived() { return _isArrived; }
     //! Perpendicular passed at waypoint
-    bool isPerpendicualrPassed() { return _isPerpendicularPassed; }
+    bool isPerpendicularPassed() { return _isPerpendicularPassed; }
     //! Bearing origin to destination
     Heading bearingOriginToDestination() { return _bearingOriginToDestination; }
     //! Destination Waypoint ID

@@ -80,7 +80,7 @@ TEST_CASE( "NMEAMessageAPB is parsed properly" ) {
     REQUIRE( apb.xte() == 2.345f );
     REQUIRE( apb.directionToSteer() == LateralityLeft );
     REQUIRE( apb.isArrived() == false );
-    REQUIRE( apb.isPerpendicualrPassed() == false );
+    REQUIRE( apb.isPerpendicularPassed() == false );
     REQUIRE( apb.bearingOriginToDestination().degrees == 266.243f );
     REQUIRE( apb.bearingOriginToDestination().isMagnetic == false );
     REQUIRE( apb.destinationWaypointID() == std::string("001") );

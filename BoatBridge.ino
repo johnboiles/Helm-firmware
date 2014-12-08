@@ -115,9 +115,9 @@ void loop() {
             if (MESSAGE_IS_NMEA_TYPE(message, "RMB")) {
                 NMEAMessageRMB rmb = NMEAMessageRMB(message);
                 Heading bearingToDestination = rmb.bearingToDestination();
-                // TODO: Not sure if the ST4000 picks up the magnetic variation from message 99. If not, it might be beneficial to do the conversion to magnetic heading here.
+                // I don't think the ST4000 picks up the magnetic variation from message 99. So we convert to magnetic here
                 // It's also possible to do the conversion in OpenCPN's connection settings
-//                bearingToDestination = BOAT_STATE.headingToMagnetic(bearingToDestination)
+                bearingToDestination = BOAT_STATE.headingToMagnetic(bearingToDestination);
                 SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(rmb.xte(), bearingToDestination, rmb.rangeToDestiation(), rmb.directionToSteer(), 0x7);
                 SEND_SEATALK_MESSAGE(nav);
             } else if (MESSAGE_IS_NMEA_TYPE(message, "APB")) {
@@ -130,9 +130,9 @@ void loop() {
                 }
             } else if (MESSAGE_IS_NMEA_TYPE(message, "RMC")) {
                 NMEAMessageRMC rmc = NMEAMessageRMC(message);
-                if (rmc.magneticVariation() && !((int)rmc.time().second % 5)) {
+                // TODO: Probably don't need to send this every time.
+                if (rmc.magneticVariation()) {
                     BOAT_STATE.magneticVariation = rmc.magneticVariation();
-                    // TODO: Probably don't need to send this every time.
                     SeaTalkMessageMagneticVariation magneticVariation(roundf(rmc.magneticVariation()));
                     SEND_SEATALK_MESSAGE(magneticVariation);
                 }

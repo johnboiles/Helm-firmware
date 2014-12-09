@@ -286,6 +286,41 @@ public:
     }
 };
 
+// 92  02  XX  YY  00 Set Autopilot Parameter: Sent by the remote head
+// (e.g. ST600R) to set a particular parameter.
+// XX Parameter Number (see 88)
+// YY Value to set to.
+//    rudder gain  (1-9) [2]                                       1
+//    counter rudder (1-9) [2]                                     2
+//    rudder limit  (10-40) [30]                                   3
+//    turn rate limit  (1-30) [off]                                4
+//    speed  (4-60) [8]                                            5
+//    off course limit  (15-40) [20]                               6
+//    auto trim  (0-4) [1]                                         7
+//    power steer [Joy Stick] ON/OFF (not on new 400G)             9
+//    drive type  (3,4,5) [3]                                      A
+//    rudder damping  (1-9) [2]                                    B
+//    variation: (full degrees)(-30 to +30) [0]                    C
+//    auto adapt: 0=Off,1=North,2=South [1]                        D
+//    auto adapt latitude (0-80) [0]                               E
+//    auto release (only for stern drive) ON/OFF                   F
+//    rudder alignment (-7 to +7) [0]                             10
+//    Wind Trim (Wind Response) (1-9) [5] (only for sail)         11
+//    Response  (1-9) [5]                                         12
+//    Boat type:1=displ,2=semi-displ,3=plan,4=stern,5=work,6=sail 13
+//    Cal Lock:  0=OFF, 1=ON [0]                                  15
+//    Auto Tack Angle (40-125) [100] (only for sail)              1d
+class SeaTalkMessageSetAutopilotParameter : public BaseSeaTalkMessage
+{
+public:
+    SeaTalkMessageSetAutopilotParameter(const uint8_t *message) : BaseSeaTalkMessage(message, this->messageLength()) {}
+    SeaTalkMessageSetAutopilotParameter(int parameterNumber, int parameterValue);
+    int messageLength() { return 5; }
+    int parameterNumber() { return (int)_message[2]; }
+    int parameterValue() { return (int)_message[3]; }
+};
+
+
 // 99  00  XX        Compass variation sent by ST40 compass instrument
 // or ST1000, ST2000, ST4000+, E-80 every 10 seconds
 // but only if the variation is set on the instrument

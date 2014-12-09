@@ -274,6 +274,15 @@ TEST_CASE( "SeaTalkMessageNavigationToWaypoint is parsed properly" ) {
     REQUIRE( nav.trackControlMode() == 0x7 );
 }
 
+TEST_CASE( "SeaTalkMessageSetAutopilotParameter loopback test ") {
+    uint8_t expected[5] = {0x92, 0x02, 0x0C, 0x0E, 0x00};
+    SeaTalkMessageSetAutopilotParameter apParam = SeaTalkMessageSetAutopilotParameter(0xC, 14);
+    assertEqualSeaTalkMessages(&apParam, expected, 5);
+    SeaTalkMessageSetAutopilotParameter apParam2 = SeaTalkMessageSetAutopilotParameter(apParam.message());
+    REQUIRE( apParam2.parameterNumber() == 0xC );
+    REQUIRE( apParam2.parameterValue() == 14 );
+}
+
 TEST_CASE( "SeaTalkMessageMagneticVariation is generated properly" ) {
     uint8_t expected[3] = {0x99, 0x00, 0xF3};
     SeaTalkMessageMagneticVariation mv = SeaTalkMessageMagneticVariation(-13);

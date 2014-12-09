@@ -201,6 +201,14 @@ SeaTalkMessageNavigationToWaypoint::SeaTalkMessageNavigationToWaypoint(float xte
     _message[8] = _message[6] ^ 0xFF;
 }
 
+SeaTalkMessageSetAutopilotParameter::SeaTalkMessageSetAutopilotParameter(int parameterNumber, int parameterValue) : BaseSeaTalkMessage(this->messageLength()) {
+    _message[0] = 0x92;
+    _message[1] = 0x02;
+    _message[2] = (parameterNumber & 0xFF);
+    _message[3] = (parameterValue & 0xFF);
+    _message[4] = 00;
+}
+
 SeaTalkMessageMagneticVariation::SeaTalkMessageMagneticVariation(int variation) : BaseSeaTalkMessage(this->messageLength()) {
     _message[0] = 0x99;
     _message[1] = 0x00;

@@ -118,6 +118,8 @@ void loop() {
                 // I don't think the ST4000 picks up the magnetic variation from message 99. So we convert to magnetic here
                 // It's also possible to do the conversion in OpenCPN's connection settings
                 bearingToDestination = BOAT_STATE.headingToMagnetic(bearingToDestination);
+                // Maybe can trick the autopilot to go the right way by passing in the magnetic heading instead of the true heading here
+                // bearingToDestination.isMagnetic = false;
                 SeaTalkMessageNavigationToWaypoint nav = SeaTalkMessageNavigationToWaypoint(rmb.xte(), bearingToDestination, rmb.rangeToDestiation(), rmb.directionToSteer(), 0x7);
                 SEND_SEATALK_MESSAGE(nav);
             } else if (MESSAGE_IS_NMEA_TYPE(message, "APB")) {

@@ -132,11 +132,14 @@ void loop() {
                 }
             } else if (MESSAGE_IS_NMEA_TYPE(message, "RMC")) {
                 NMEAMessageRMC rmc = NMEAMessageRMC(message);
-                // TODO: Probably don't need to send this every time.
                 if (rmc.magneticVariation()) {
                     BOAT_STATE.magneticVariation = rmc.magneticVariation();
-                    SeaTalkMessageMagneticVariation magneticVariation(roundf(rmc.magneticVariation()));
-                    SEND_SEATALK_MESSAGE(magneticVariation);
+                    if ((int)rmc.time().second == 0) {
+                        // Because the ST4000 doesn't appear to pick up magnetic variation (message 0x99), we set it as a parameter
+                        // Note: parameters persist on the autopilot, so we probably don't need to send this every minute. But doing anything smarter would require us to poll the autopilot parameters, which I think disables the autopilot temporarily.
+                        SeaTalkMessageSetAutopilotParameter apParam = SeaTalkMessageSetAutopilotParameter(0xC, roundf(BOAT_STATE.magneticVariation));
+                        SEND_SEATALK_MESSAGE(apParam);
+                    }
                 }
             }
         }

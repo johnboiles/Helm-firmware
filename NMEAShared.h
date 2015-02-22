@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include <cstring>
+#include "inttypes.h"
 
 
 int calculateChecksum(char *message, size_t length);
@@ -18,5 +19,7 @@ Heading headingFromFragments(const char *degrees, const char *trueOrMagnetic);
 Laterality lateralityFromFragment(const char *fragment);
 
 Status statusFromFragment(const char *fragment);
+
+uint8_t asciiHexToBinary(char asciiHex);
 
 #endif

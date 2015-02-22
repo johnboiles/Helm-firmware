@@ -5,6 +5,28 @@
 #include "../SeaTalkParser.h"
 
 
+void failForDifferingArrays(uint8_t *array, uint8_t *expectedArray, int length, const char *failureMessage) {
+    char messageString[55];
+    char expectedString[55];
+    for (int i = 0; i < length; i++) {
+        sprintf(&messageString[i * 3], "%02x ", array[i]);
+        sprintf(&expectedString[i * 3], "%02x ", expectedArray[i]);
+    }
+    messageString[length * 3 + 1] = 0;
+    expectedString[length * 3 + 1] = 0;
+    FAIL(failureMessage << "\r\nActual  : " << messageString << "\r\nExpected: " <<  expectedString);
+}
+
+bool arraysAreEqual(uint8_t *array, uint8_t *expectedArray, int length) {
+    for (int i = 0; i < length; i++) {
+        if ( array[i] != expectedArray[i] ) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 TEST_CASE( "NMEAMessageRMC is parsed properly" ) {
     // Actual message from a uBlox-6 GPS
     NMEAMessageRMC rmc = NMEAMessageRMC("$GPRMC,045431.00,A,3751.98405,N,12218.96980,W,0.078,,041114,,,D*68\r\n");
@@ -90,6 +112,21 @@ TEST_CASE( "NMEAMessageAPB is parsed properly" ) {
     REQUIRE( apb.headingToSteerToWaypoint().isMagnetic == false );
 }
 
+TEST_CASE( "NMEAMessageSEA is constructed properly" ) {
+    uint8_t message[4] = {0x10, 0x11, 0x02, 0x6E};
+    NMEAMessageSEA sea = NMEAMessageSEA(message, 4);
+    REQUIRE( std::string(sea.message()) == std::string("$STSEA,1011026E*0C\r\n") );
+}
+
+TEST_CASE( "NMEAMessageSEA is parsed properly" ) {
+    uint8_t message[4] = {0x10, 0x11, 0x02, 0x6E};
+    NMEAMessageSEA sea = NMEAMessageSEA("$STSEA,1011026E*0C\r\n");
+    REQUIRE ( sea.seaTalkMessageLength() == 4 );
+    if (!arraysAreEqual(sea.seaTalkMessage(), message, 4)) {
+        failForDifferingArrays(sea.seaTalkMessage(), message, 4, "NMEAMessageSEA generated incorrect byte string.");
+    }
+}
+
 TEST_CASE( "SeaTalkParser" ) {
     SeaTalkParser parser = SeaTalkParser();
     bool completed;
@@ -116,22 +153,10 @@ TEST_CASE( "SeaTalkMessageWindSpeed is parsed properly" ) {
 
 void assertEqualSeaTalkMessages(BaseSeaTalkMessage *seaTalkMessage, uint8_t *expected, int expectedLength) {
     REQUIRE ( seaTalkMessage->messageLength() == expectedLength );
-    bool failed = false;
-    for (int i = 0; i < seaTalkMessage->messageLength(); i++) {
-        if ( seaTalkMessage->message()[i] != expected[i] ) {
-            failed = true;
-        }
-    }
+    bool failed = !arraysAreEqual(seaTalkMessage->message(), expected, expectedLength);
+    
     if (failed) {
-        char messageString[55];
-        char expectedString[55];
-        for (int i = 0; i < expectedLength; i++) {
-            sprintf(&messageString[i * 3], "%02x ", seaTalkMessage->message()[i]);
-            sprintf(&expectedString[i * 3], "%02x ", expected[i]);
-        }
-        messageString[expectedLength * 3 + 1] = 0;
-        expectedString[expectedLength * 3 + 1] = 0;
-        FAIL("SeaTalk messages differ\r\nActual  : " << messageString << "\r\nExpected: " <<  expectedString);
+        failForDifferingArrays(seaTalkMessage->message(), expected, expectedLength, "SeaTalk messages differ");
     }
 }
 

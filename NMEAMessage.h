@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "NMEAShared.h"
+#include "inttypes.h"
 
 #define COPY_STRING(instance_var, string) do { strncpy(instance_var, string, min(sizeof(instance_var) - 1, strlen(string)) + 1); } while (0);
 
@@ -154,5 +155,19 @@ private:
     Heading _bearingPresentToDestination;
     Heading _headingToSteerToWaypoint;
 };
+
+
+class NMEAMessageSEA : public BaseNMEAMessage
+{
+public:
+    NMEAMessageSEA(const char *message);
+    NMEAMessageSEA(const uint8_t *seaTalkMessage, uint8_t seaTalkMessageLength);
+    uint8_t *seaTalkMessage() { return _seaTalkMessage; }
+    uint8_t seaTalkMessageLength() { return _seaTalkMessageLength; }
+private:
+    uint8_t _seaTalkMessage[18];
+    uint8_t _seaTalkMessageLength;
+};
+
 
 #endif

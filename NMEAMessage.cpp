@@ -10,7 +10,7 @@ void closeMessage(char *message) {
     size_t messageLength = strlen(message);
     int checksum = calculateChecksum(&(message[1]), messageLength - 1);
     message[messageLength++] = '*';
-    sprintf(&(message[messageLength]), "%2X", checksum);
+    sprintf(&(message[messageLength]), "%02X", checksum);
     messageLength += 2;
     sprintf(&(message[messageLength]), "\r\n");
 }
@@ -131,4 +131,32 @@ NMEAMessageAPB::NMEAMessageAPB(const char *message) : BaseNMEAMessage() {
     for (int i = 0; i < fragmentCount; i++) {
         free(fragments[i]);
     }
+}
+
+
+NMEAMessageSEA::NMEAMessageSEA(const char *message) : BaseNMEAMessage() {
+    char *fragments[3];
+    int fragmentCount = 0;
+    splitMessageIntoFragments(message, strlen(message), fragments, &fragmentCount);
+
+    // Convert ascii hex to binary
+    _seaTalkMessageLength = strlen(fragments[1]) / 2;
+    for (int i = 0; i < _seaTalkMessageLength; i++) {
+        _seaTalkMessage[i] = (asciiHexToBinary(fragments[1][2 * i]) << 4) + asciiHexToBinary(fragments[1][2 * i + 1]);
+    }
+}
+
+
+NMEAMessageSEA::NMEAMessageSEA(const uint8_t *seaTalkMessage, uint8_t seaTalkMessageLength) {
+    memcpy(&_seaTalkMessage, seaTalkMessage, seaTalkMessageLength);
+    _seaTalkMessageLength = seaTalkMessageLength;
+    
+    sprintf(_message, "$STSEA,");
+    uint8_t headerLength = 7;
+
+    // Convert binary to ascii hex
+    for (int i = 0; i < seaTalkMessageLength; i++) {
+        sprintf(&(_message[headerLength + 2 * i]), "%02X", seaTalkMessage[i]);
+    }
+    closeMessage(_message);
 }

@@ -103,3 +103,15 @@ Status statusFromFragment(const char *fragment) {
         return StatusUnknown;
     }
 }
+
+uint8_t asciiHexToBinary(char asciiHex) {
+    if (asciiHex >= '0' && asciiHex <= '9') {
+        return asciiHex - '0';
+    } else if (asciiHex >= 'A' && asciiHex <= 'F') {
+        return (asciiHex - 'A' + 10);
+    } else if (asciiHex >= 'a' && asciiHex <= 'f') {
+        return (asciiHex - 'a' + 10);
+    } else {
+        return 0;
+    }
+}

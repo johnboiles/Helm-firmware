@@ -103,6 +103,7 @@ void loop() {
 #endif
         }
     }
+    // Route messages from the computer to the SeaTalk network
     if (OUTPUT_SERIAL.available()) {
         digitalWrite(DEBUG_LED, HIGH);
         // Always consume incoming bytes. Teensy seems to crash otherwise
@@ -141,6 +142,10 @@ void loop() {
                         SEND_SEATALK_MESSAGE(apParam);
                     }
                 }
+            } else if (MESSAGE_IS_NMEA_TYPE(message, "SEA")) {
+                NMEAMessageSEA sea = NMEAMessageSEA(message);
+                BaseSeaTalkMessage genericMessage = BaseSeaTalkMessage(sea.seaTalkMessage(), sea.seaTalkMessageLength());
+                SEND_SEATALK_MESSAGE(genericMessage);
             }
         }
     }
@@ -153,7 +158,8 @@ void loop() {
             // TODO: Need to dig deeper into the UART so that I can do collision managment
             BaseSeaTalkMessage *message = newSeaTalkMessage(SEATALK_PARSER.message(), SEATALK_PARSER.messageLength());
 #if ROUTE_RAW_SEATALK_TO_OUTPUT
-            PRINT_SEATALK_MESSAGE(message);
+            NMEAMessageSEA sea = NMEAMessageSEA(message->message(), message->messageLength());
+            OUTPUT_SERIAL.print(sea.message());
 #endif
             SeaTalkMessageType messageType = message->messageType();
             if (messageType == SeaTalkMessageTypeWindAngle) {

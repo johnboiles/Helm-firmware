@@ -129,7 +129,7 @@ upload-remote: $(TARGET).hex
 
 test:
 	@echo "Compiling tests $(TEST_FILES)"
-	$(TEST_CXX) -Wall -Itesting -I. $(TEST_FILES) testing/ArduinoMock.cpp testing/Tests.c -o test_suite
+	$(TEST_CXX) -Wall -Itesting -I. $(TEST_FILES) testing/ArduinoMock.cpp testing/Tests.cpp -o test_suite
 	@echo "Running tests"
 	./test_suite
 	rm test_suite

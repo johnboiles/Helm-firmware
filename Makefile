@@ -54,7 +54,7 @@ CORE_PARENT = $(ARDUINO)/hardware/teensy/cores
 CORE_PATH = $(CORE_PARENT)/teensy3
 
 # path location for Arduino libraries
-LIBRARY_PARENT = ..
+LIBRARY_PARENT = .
 LIBRARY_PATH = $(LIBRARY_PARENT)/libraries
 
 # path location for the arm-none-eabi compiler

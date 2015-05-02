@@ -5,7 +5,7 @@ HOST=root@boat-pi.local
 LOADER=/root/repos/teensy_loader_cli/teensy_loader_cli
 
 # Shouldn't need to change these
-FIRMWARE_FILE=firmware.hex
+FIRMWARE_FILE=Helm-firmware.hex
 TEMP_DIR=$(ssh $HOST 'mktemp -d')
 MMCU=mk20dx256
 scp $FIRMWARE_FILE $HOST:$TEMP_DIR

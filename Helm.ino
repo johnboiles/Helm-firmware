@@ -18,6 +18,7 @@
 #define NMEA_HS_SERIAL Serial1
 #define SEATALK_SERIAL Serial3
 #define GPS_SERIAL Serial2
+#define GPS_PWR_CTRL_PIN 11
 // NOTE: TX Buffer should be at least 160b (assuming GSV messages are dropped) since NMEA0183 is 4800 baud
 AltSoftSerial NMEA_SERIAL;
 
@@ -39,6 +40,9 @@ void setup() {
     SEATALK_SERIAL.begin(4800, SERIAL_9N1_RXINV_TXINV);
     GPS_SERIAL.begin(9600);
     NMEA_SERIAL.begin(4800);
+
+    pinMode(GPS_PWR_CTRL_PIN, OUTPUT);
+    digitalWrite(GPS_PWR_CTRL_PIN, HIGH);
 
     // Enable interrupts
     sei();
